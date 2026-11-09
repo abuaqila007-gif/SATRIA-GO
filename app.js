@@ -246,16 +246,19 @@ function chooseProvider(id) {
   });
   renderProviderServices(p);
 }
+function isEnabled(value) {
+  return value === true || value === 1 || String(value ?? "").trim().toLowerCase() === "true" || String(value ?? "").trim() === "1";
+}
 function acceptsMethod(p, method) {
   const visit = String(p?.menerima_kunjungan || "").toLowerCase();
   if (method === "home") {
     // Kolom menerima_panggilan adalah penentu khusus home visit.
     // Profil dengan nilai "both" tetap tidak boleh tampil bila menerima_panggilan=false.
-    return p?.menerima_panggilan === true;
+    return isEnabled(p?.menerima_panggilan);
   }
   // Default: pelanggan datang ke tempat praktik. Profil "both" juga diterima.
   return ["clinic", "both", "keduanya", "datang", "praktik"].includes(visit)
-    || p?.menerima_kunjungan === true;
+    || isEnabled(p?.menerima_kunjungan);
 }
 let satriaMap = null;
 let mapMarkers = [];
@@ -303,50 +306,84 @@ function renderMemberMap(items = providers) {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(satriaMap);
   }
   mapMarkers.forEach(m => m.remove()); mapMarkers = [];
-  located.forEach(({provider:p,location:loc}) => {
-    const photoUrl = mapPhotoUrl(p);
-    const icon = L.divIcon({
-      className: 'satria-photo-marker-wrap',
-      html: `<span class="satria-photo-marker"><img src="${escapeMapText(photoUrl)}" alt=""></span>`,
-      iconSize: [58,58], iconAnchor: [29,29], popupAnchor: [0,-27]
-    });
-    const marker = L.marker([Number(loc.latitude),Number(loc.longitude)],{icon}).addTo(satriaMap);
+  // Kelompokkan terapis yang berbagi tempat praktik atau memiliki koordinat sangat berdekatan.
+  // Ambang 25 meter mencegah pin suami-istri/mitra satu klinik saling menutupi.
+  const distanceMeters = (a, b) => {
+    const rad = n => n * Math.PI / 180;
+    const dLat = rad(Number(b.latitude) - Number(a.latitude));
+    const dLon = rad(Number(b.longitude) - Number(a.longitude));
+    const lat1 = rad(Number(a.latitude)), lat2 = rad(Number(b.latitude));
+    const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+    return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+  };
+  const locationGroups = [];
+  located.forEach(item => {
+    let group = locationGroups.find(g => distanceMeters(g.center, item.location) <= 25);
+    if (!group) {
+      group = { center: { latitude: Number(item.location.latitude), longitude: Number(item.location.longitude) }, items: [] };
+      locationGroups.push(group);
+    }
+    group.items.push(item);
+    // Rata-rata koordinat asli untuk pusat grup; tidak mengubah koordinat di database.
+    group.center.latitude = group.items.reduce((sum,x)=>sum+Number(x.location.latitude),0)/group.items.length;
+    group.center.longitude = group.items.reduce((sum,x)=>sum+Number(x.location.longitude),0)/group.items.length;
+  });
+
+  locationGroups.forEach(group => {
+    const members = group.items;
+    const first = members[0];
+    const center = group.center;
+    let icon;
+    if (members.length > 1) {
+      icon = L.divIcon({
+        className: 'satria-photo-marker-wrap satria-multi-marker-wrap',
+        html: `<span class="satria-multi-marker"><span>${members.length}</span><small>TERAPIS</small></span>`,
+        iconSize: [64,64], iconAnchor: [32,32], popupAnchor: [0,-28]
+      });
+    } else {
+      const photoUrl = mapPhotoUrl(first.provider);
+      icon = L.divIcon({
+        className: 'satria-photo-marker-wrap',
+        html: `<span class="satria-photo-marker"><img src="${escapeMapText(photoUrl)}" alt=""></span>`,
+        iconSize: [58,58], iconAnchor: [29,29], popupAnchor: [0,-27]
+      });
+    }
+    const marker = L.marker([center.latitude,center.longitude],{icon}).addTo(satriaMap);
     const status = practiceStatusText().replace('● ','');
-    const wa = mapWhatsApp(p);
-    const mapsUrl = providerMapUrl(p, loc);
-    const packages = Array.isArray(p.packages) ? p.packages : [];
-    const packageLines = packages.slice(0, 3).map(pkg =>
-      `<li><span>${escapeMapText(pkg.nama_paket || 'Paket terapi')}</span><b>${escapeMapText(formatMapPrice(pkg.tarif))}</b></li>`
-    ).join('');
-    const serviceNames = [...new Set([
-      ...(Array.isArray(p.services) ? p.services.map(s => catalog.find(c => String(c.id) === String(s.service_id))?.nama).filter(Boolean) : []),
-      ...(p.layanan ? String(p.layanan).split(/[,;•]/).map(x => x.trim()).filter(Boolean) : [])
-    ])].slice(0, 5);
-    const servicesHtml = serviceNames.length
-      ? `<p class="satria-map-services"><b>Layanan:</b> ${escapeMapText(serviceNames.join(' • '))}</p>`
-      : '';
-    const prices = packages.map(x => Number(x.tarif)).filter(Number.isFinite);
-    if (p.tarif_min != null && Number.isFinite(Number(p.tarif_min))) prices.push(Number(p.tarif_min));
-    const startingPrice = prices.length ? Math.min(...prices) : null;
-    const priceHtml = startingPrice !== null
-      ? `<p class="satria-map-starting">Mulai <b>${escapeMapText(formatMapPrice(startingPrice))}</b></p>`
-      : '<p class="satria-map-starting">Tarif dikonfirmasi dengan terapis</p>';
-    const packagesHtml = packageLines ? `<div class="satria-map-packages"><b>Paket terapi</b><ul>${packageLines}</ul></div>` : '';
-    const canContact = p?.menerima_panggilan === true;
-    const popup = `<div class="satria-map-popup"><div class="satria-map-popup-head"><img src="${escapeMapText(photoUrl)}" alt=""><div><b>${escapeMapText(p.nama)}</b><small>${escapeMapText(p.klinik || 'Anggota SATRIA')}</small></div></div><p>${escapeMapText(providerLocation(p) || p.kota)}</p><small>${status}</small>${servicesHtml}${priceHtml}${packagesHtml}<div class="satria-map-popup-actions">${canContact && wa ? `<a class="map-wa" href="${escapeMapText(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a class="map-directions" href="${mapsUrl}" target="_blank" rel="noopener">Petunjuk arah</a></div></div>`;
+    const memberCards = members.map(({provider:p,location:loc}) => {
+      const photoUrl = mapPhotoUrl(p);
+      const wa = mapWhatsApp(p);
+      const mapsUrl = providerMapUrl(p, loc);
+      const packages = Array.isArray(p.packages) ? p.packages : [];
+      const serviceNames = [...new Set([
+        ...(Array.isArray(p.services) ? p.services.map(s => catalog.find(c => String(c.id) === String(s.service_id))?.nama).filter(Boolean) : []),
+        ...(p.layanan ? String(p.layanan).split(/[,;•]/).map(x => x.trim()).filter(Boolean) : [])
+      ])].slice(0, 5);
+      const servicesHtml = serviceNames.length ? `<p class="satria-map-services"><b>Layanan:</b> ${escapeMapText(serviceNames.join(' • '))}</p>` : '';
+      const prices = packages.map(x => Number(x.tarif)).filter(Number.isFinite);
+      if (p.tarif_min != null && Number.isFinite(Number(p.tarif_min))) prices.push(Number(p.tarif_min));
+      const startingPrice = prices.length ? Math.min(...prices) : null;
+      const priceHtml = startingPrice !== null ? `<p class="satria-map-starting">Mulai <b>${escapeMapText(formatMapPrice(startingPrice))}</b></p>` : '<p class="satria-map-starting">Tarif dikonfirmasi dengan terapis</p>';
+      const canContact = isEnabled(p?.menerima_panggilan);
+      const bookingText = isEnabled(p?.menerima_pesanan) ? 'Menerima pesanan' : 'Belum menerima pesanan';
+      const profileUrl = `/terapis/${providerProfileSlug(p)}`;
+      return `<section class="satria-map-member"><div class="satria-map-popup-head"><img src="${escapeMapText(photoUrl)}" alt=""><div><b>${escapeMapText(p.nama)}</b><small>${escapeMapText(p.klinik || loc?.nama_tempat || 'Anggota SATRIA')}</small></div></div><p>${escapeMapText(providerLocation(p) || p.kota)}</p><small>${escapeMapText(status)} • ${escapeMapText(bookingText)}</small>${servicesHtml}${priceHtml}<div class="satria-map-popup-actions">${canContact && wa ? `<a class="map-wa" href="${escapeMapText(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a class="map-directions" href="${escapeMapText(mapsUrl)}" target="_blank" rel="noopener">Petunjuk arah</a><a class="map-directions" href="${escapeMapText(profileUrl)}">Profil</a></div></section>`;
+    }).join('<hr class="satria-map-member-divider">');
+    const popup = `<div class="satria-map-popup">${members.length > 1 ? `<b class="satria-map-group-title">${members.length} terapis di lokasi ini</b>` : ''}${memberCards}</div>`;
     marker.bindPopup(popup, {
-      maxWidth: Math.min(196, Math.max(176, window.innerWidth - 112)),
-      minWidth: Math.min(176, Math.max(160, window.innerWidth - 140)),
-      maxHeight: Math.round(window.innerHeight * 0.32),
-      offset: [12, -12], autoPan: true, keepInView: true, autoPanPadding: [24, 24],
+      maxWidth: Math.min(280, Math.max(210, window.innerWidth - 72)),
+      minWidth: Math.min(210, Math.max(190, window.innerWidth - 100)),
+      maxHeight: Math.round(window.innerHeight * 0.52),
+      offset: [0, -12], autoPan: true, keepInView: true, autoPanPadding: [20, 20],
       closeButton: true
-    }); mapMarkers.push(marker);
+    });
+    mapMarkers.push(marker);
   });
   // Fokus awal di Jawa Tengah agar peta tidak mengecil terlalu jauh karena anggota lintas provinsi.
   // Semua pin tetap tersedia; pengguna dapat zoom out untuk melihat wilayah lain.
-  if (located.length === 1) {
-    satriaMap.setView([Number(located[0].location.latitude),Number(located[0].location.longitude)],14);
-  } else if (located.length > 1) {
+  if (locationGroups.length === 1) {
+    satriaMap.setView([locationGroups[0].center.latitude,locationGroups[0].center.longitude],14);
+  } else if (locationGroups.length > 1) {
     satriaMap.setView([-7.15,110.40],8);
   }
 }
@@ -397,7 +434,7 @@ function renderProviders(items) {
     ? `Menampilkan profil anggota SATRIA terverifikasi di wilayah ${patientCity}. Tombol pesan hanya aktif untuk mitra yang membuka pemesanan.`
     : "Pilih kota/kabupaten domisili untuk menampilkan profil anggota terverifikasi di wilayah tersebut.";
   visibleProviders.forEach(p => {
-    const canBook = p?.menerima_pesanan === true && acceptsMethod(p, selectedMethod);
+    const canBook = isEnabled(p?.menerima_pesanan) && acceptsMethod(p, selectedMethod);
     const kota = p.kota || (p.lokasi || []).find(l => l.kota)?.kota || "Kota belum dicantumkan";
     if (canBook) {
       const opt = document.createElement("option");
@@ -496,7 +533,7 @@ function renderProviders(items) {
     else card.append(identity,location,state,modes,count,actions);
     providerGrid.appendChild(card);
   });
-  const bookableProviders = visibleProviders.filter(p => p?.menerima_pesanan === true && acceptsMethod(p, selectedMethod));
+  const bookableProviders = visibleProviders.filter(p => isEnabled(p?.menerima_pesanan) && acceptsMethod(p, selectedMethod));
   const selected = bookableProviders.find(p => String(p.anggota_id) === String(selectedProviderId)) || bookableProviders[0];
   if (selected) {
     chooseProvider(selected.anggota_id);
