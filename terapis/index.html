@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#087d50">
+<title>Profil Terapis SATRIA GO</title>
+<meta name="description" content="Profil terapis profesional SATRIA GO. Lihat layanan, tarif, lokasi dan reservasi terapi.">
+<link rel="icon" href="/logo-satria.png">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7f5;color:#172b23;font-family:Arial,sans-serif}
+header{background:#087d50;color:white;padding:17px 20px;display:flex;align-items:center;gap:12px}
+header img{width:42px;height:42px;object-fit:contain;background:white;border-radius:10px}
+header b{font-size:19px}
+main{max-width:760px;margin:24px auto;padding:0 15px}
+.card{background:white;border-radius:17px;padding:20px;margin-bottom:16px;box-shadow:0 3px 15px #173b2410}
+.profile{text-align:center}
+.photo{width:145px;height:145px;object-fit:cover;border-radius:50%;border:5px solid #e1f3e9;background:#eee}
+h1{font-size:25px;margin:14px 0 7px}
+h2{font-size:18px;margin:0 0 15px}
+.muted{color:#718078;font-size:14px;line-height:1.7}
+.verified{color:#087d50;font-weight:bold;font-size:13px}
+.tag{display:inline-block;background:#e5f5eb;color:#087d50;border-radius:20px;padding:8px 12px;margin:4px;font-size:12px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #edf0ee}
+.row:last-child{border:0}
+.price{font-weight:bold;color:#087d50}
+button,.btn{display:block;width:100%;padding:15px;border:0;border-radius:11px;background:#087d50;color:white;text-align:center;font-weight:bold;text-decoration:none;font-size:15px;margin-top:11px;cursor:pointer}
+.whatsapp{background:#159b58}
+.secondary{background:#e8f3ed;color:#087d50}
+.notice{background:#fff7e4;color:#76591b;padding:12px;border-radius:10px;font-size:13px;line-height:1.6}
+footer{text-align:center;padding:25px;color:#7c8981;font-size:12px}
+#loading{text-align:center;padding:65px 15px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+<img src="/logo-satria.png" alt="SATRIA">
+<div><b>SATRIA GO</b><div style="font-size:12px">Therapy & Recovery Network</div></div>
+</header>
+
+<main>
+<div id="loading">Memuat profil terapis SATRIA...</div>
+<div id="error" class="card hidden">
+<h2>Profil belum ditemukan</h2>
+<p class="muted">Profil tidak tersedia atau belum terverifikasi. Silakan kembali ke katalog SATRIA GO.</p>
+<a class="btn" href="/">Kembali ke SATRIA GO</a>
+</div>
+
+<div id="content" class="hidden">
+<section class="card profile">
+<img id="photo" class="photo" src="/logo-satria.png" alt="Foto terapis">
+<h1 id="name"></h1>
+<div class="verified">✓ TERVERIFIKASI SATRIA</div>
+<p id="clinic" class="muted"></p>
+<div id="special" ></div>
+</section>
+
+<section class="card">
+<h2>Informasi Terapis</h2>
+<div class="row"><span>📍 Lokasi</span><b id="location">-</b></div>
+<div class="row"><span>🩺 Layanan aktif</span><b id="serviceCount">-</b></div>
+<div class="row"><span>💰 Tarif</span><b id="tariff">Konfirmasi</b></div>
+<div class="row"><span>🏠 Home Visit</span><b id="home">-</b></div>
+<div id="homeNote" class="notice hidden"></div>
+</section>
+
+<section class="card">
+<h2>Layanan Terapi</h2>
+<div id="services" class="muted">Belum ada data layanan.</div>
+</section>
+
+<section class="card">
+<h2>Paket Terapi</h2>
+<div id="packages" class="muted">Informasi paket belum tersedia.</div>
+</section>
+
+<section class="card">
+<h2>Reservasi Terapi</h2>
+<p class="muted">Pilih terapis ini untuk melanjutkan pemesanan melalui sistem resmi SATRIA GO.</p>
+<a id="booking" class="btn">PILIH TERAPIS & RESERVASI</a>
+<a id="wa" class="btn whatsapp" target="_blank" rel="noopener">HUBUNGI VIA WHATSAPP</a>
+<a id="map" class="btn secondary hidden" target="_blank" rel="noopener">LIHAT LOKASI DI PETA</a>
+</section>
+</div>
+</main>
+
+<footer>
+© SATRIA RECOVERY INDONESIA<br>
+SATRIA GO – Platform Pemesanan Terapis
+</footer>
+
+<script src="/config.js"></script>
+<script>
+(function(){
+"use strict";
+
+const cfg=window.SATRIA_GO_CONFIG||{};
+const loading=document.getElementById("loading");
+const content=document.getElementById("content");
+const error=document.getElementById("error");
+
+function slug(p){
+const name=String(p?.nama||"terapis-satria")
+.normalize("NFKD")
+.replace(/[\u0300-\u036f]/g,"")
+.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-")
+.replace(/^-|-$/g,"");
+return `${name||"terapis"}-${encodeURIComponent(String(p?.anggota_id??p?.id??""))}`;
+}
+
+function money(v){
+const n=Number(v);
+return Number.isFinite(n)?"Rp "+n.toLocaleString("id-ID"):"";
+}
+
+function showError(){
+loading.classList.add("hidden");
+error.classList.remove("hidden");
+}
+
+function addRow(container,label,value){
+if(value===null||value===undefined||value==="")return;
+const div=document.createElement("div");
+div.className="row";
+const a=document.createElement("span");
+const b=document.createElement("b");
+a.textContent=label;
+b.textContent=value;
+div.append(a,b);
+container.append(div);
+}
+
+async function init(){
+try{
+if(!cfg.functionsBaseUrl||!cfg.publishableKey)
+throw new Error("Konfigurasi belum tersedia.");
+
+const response=await fetch(
+cfg.functionsBaseUrl.replace(/\/$/,"")+"/public-catalog",
+{headers:{
+"apikey":cfg.publishableKey
+}}
+);
+
+if(!response.ok)throw new Error("Katalog tidak dapat diakses.");
+
+const data=await response.json();
+const providers=Array.isArray(data.providers)?data.providers:[];
+const current=decodeURIComponent(location.pathname.split("/").filter(Boolean).pop()||"");
+
+const p=providers.find(x=>
+x.status_verifikasi==="verified"&&slug(x)===current
+);
+
+if(!p)throw new Error("Profil tidak ditemukan.");
+
+document.title=(p.nama||"Profil Terapis")+" | SATRIA GO";
+document.getElementById("name").textContent=p.nama||"Terapis SATRIA";
+document.getElementById("clinic").textContent=p.klinik||"Anggota SATRIA";
+document.getElementById("location").textContent=
+Array.isArray(p.kota)?p.kota.join(", "):(p.kota||"Informasi lokasi belum tersedia");
+
+const photo=document.getElementById("photo");
+if(p.foto_url){
+photo.src=p.foto_url;
+photo.onerror=()=>photo.src="/logo-satria.png";
+}
+
+const services=Array.isArray(data.services)?data.services:[];
+const providerServices=Array.isArray(p.services)?p.services:[];
+const serviceNames=providerServices.map(s=>{
+if(typeof s==="string")return s;
+return s.nama||s.name||services.find(x=>String(x.id)===String(s.id))?.nama||"";
+}).filter(Boolean);
+
+document.getElementById("serviceCount").textContent=serviceNames.length+" layanan";
+const serviceBox=document.getElementById("services");
+serviceBox.textContent="";
+if(serviceNames.length){
+serviceNames.forEach(s=>{
+const span=document.createElement("span");
+span.className="tag";
+span.textContent=s;
+serviceBox.append(span);
+});
+}else{
+serviceBox.textContent="Informasi layanan belum tersedia.";
+}
+
+const packages=Array.isArray(p.packages)?p.packages:[];
+const packageBox=document.getElementById("packages");
+packageBox.textContent="";
+if(packages.length){
+packages.forEach(x=>{
+const price=money(x.tarif);
+addRow(packageBox,x.nama_paket||"Paket terapi",price);
+});
+}else{
+packageBox.textContent="Belum ada paket yang ditampilkan.";
+}
+
+let tariff="Konfirmasi kepada terapis";
+if(p.tarif_min!=null&&p.tarif_max!=null){
+tariff=money(p.tarif_min)+" – "+money(p.tarif_max);
+}else if(p.tarif_min!=null){
+tariff="Mulai "+money(p.tarif_min);
+}
+document.getElementById("tariff").textContent=tariff;
+
+const home=p.menerima_panggilan===true;
+document.getElementById("home").textContent=
+home?"HOME VISIT TERSEDIA":"Tidak tersedia";
+
+if(home){
+const note=document.getElementById("homeNote");
+note.textContent="Biaya tambahan Home Visit dikonfirmasi langsung melalui WhatsApp kepada terapis. Nominal mengikuti kebijakan terapis dan lokasi.";
+note.classList.remove("hidden");
+}
+
+if(p.layanan){
+document.getElementById("special").textContent=p.layanan;
+}
+
+const id=p.anggota_id??p.id;
+document.getElementById("booking").href=
+"/?provider="+encodeURIComponent(id)+"#patientSearch";
+
+const raw=p.whatsapp||p.nomor_whatsapp||p.no_whatsapp||"";
+const digits=String(raw).replace(/\D/g,"").replace(/^0/,"62");
+const wa=document.getElementById("wa");
+
+if(digits){
+wa.href="https://wa.me/"+digits;
+}else{
+wa.href="#";
+wa.textContent="WhatsApp belum tersedia";
+}
+
+const loc=Array.isArray(p.lokasi)?p.lokasi:[];
+if(loc.length&&loc[0].latitude!=null&&loc[0].longitude!=null){
+const map=document.getElementById("map");
+map.href="https://www.google.com/maps?q="+
+encodeURIComponent(loc[0].latitude+","+loc[0].longitude);
+map.classList.remove("hidden");
+}
+
+loading.classList.add("hidden");
+content.classList.remove("hidden");
+
+}catch(e){
+console.error("Profil SATRIA:",e);
+showError();
+}
+}
+
+init();
+})();
+</script>
+</body>
+</html>
