@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#c90016">
+  <meta name="description" content="SATRIA GO - Temukan dan pesan layanan terapis SATRIA di kota Anda. Pilih keluhan, temukan terapis, dan buat pesanan dengan mudah.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SATRIA GO">
+  <meta property="og:title" content="SATRIA GO — Therapy & Recovery Network">
+  <meta property="og:description" content="Temukan dan pesan layanan terapis SATRIA di kota Anda.">
+  <meta property="og:url" content="https://satria-go.pages.dev/">
+  <meta property="og:image" content="https://satria-go.pages.dev/og-preview-v2.jpg">
+  <meta property="og:image:secure_url" content="https://satria-go.pages.dev/og-preview-v2.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="675">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SATRIA GO — Therapy & Recovery Network">
+  <meta name="twitter:description" content="Temukan dan pesan layanan terapis SATRIA di kota Anda.">
+  <meta name="twitter:image" content="https://satria-go.pages.dev/og-preview-v2.jpg">
+  <link rel="canonical" href="https://satria-go.pages.dev/">
+  <title>SATRIA GO — Therapy & Recovery Network</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#"><img class="brand-logo" src="logo-satria.png" alt="Logo SATRIA"><span><b>SATRIA <em>GO</em></b><small>THERAPY & RECOVERY NETWORK</small></span></a>
+  <button class="icon-btn" id="locationBtn" aria-label="Lokasi"><span>⌖</span></button>
+</header>
+<main>
+  <section class="hero">
+    <div class="hero-copy"><div class="eyebrow">SATRIA GO • JARINGAN TERAPIS SATRIA</div>
+    <h1>Temukan terapis<br>profesional SATRIA<br><em>di kota Anda.</em></h1>
+    <p>Pesan layanan terapi anggota SATRIA, datang ke tempat praktik atau panggil ke rumah.</p>
+    <div class="hero-actions"><a href="#complaints" class="btn btn-light">Pilih keluhan <span>→</span></a><span class="hero-note">Tanpa akun pelanggan</span></div></div>
+    <img class="hero-robot" src="robot-satria.png" alt="Maskot robot SATRIA"></section>
+  <section class="location-strip">
+    <div class="pin">⌖</div><div><small>LOKASI PENCARIAN</small><b id="locationText">Lokasi belum dipilih</b></div>
+    <span class="text-btn" aria-hidden="true">Tanpa GPS</span>
+  </section>
+  <section class="section patient-search-section" id="patientSearch">
+    <div class="eyebrow dark">MULAI PENCARIAN</div><h2>Data pasien & domisili</h2>
+    <p class="small-muted">Cukup isi kota atau kabupaten. GPS dan alamat lengkap tidak wajib untuk mencari terapis.</p>
+    <form id="patientSearchForm" class="patient-search-form">
+      <label>Nama pasien<input id="patientName" name="patient_name" required maxlength="100" placeholder="Nama lengkap"></label>
+      <label>Nomor WhatsApp<input id="patientWhatsapp" name="patient_whatsapp" required inputmode="tel" maxlength="20" placeholder="08xxxxxxxxxx"></label>
+      <label>Kota / Kabupaten domisili<input id="patientCity" name="patient_city" required maxlength="100" placeholder="Contoh: Kabupaten Semarang"></label>
+      <button class="btn btn-primary full" type="submit">Lanjut pilih keluhan <span>→</span></button>
+    </form>
+    <p class="small-muted">Data pribadi hanya digunakan untuk proses pemesanan dan tidak ditampilkan di profil publik.</p>
+  </section>
+  <section class="section complaint-section" id="complaints">
+    <div class="complaint-heading"><div><div class="eyebrow dark">PILIH KELUHAN FISIK</div><h2>Apa keluhan Anda?</h2><p>Pilih bagian tubuh atau masalah gerak yang Anda alami.</p></div><span class="count">12 kategori</span></div>
+    <div class="complaint-grid">
+      <button class="complaint-card" type="button" data-complaint="Leher & Bahu">
+        <span class="complaint-icon">✚</span><b>Leher & Bahu</b><small>Nyeri leher, bahu kaku, sulit menoleh</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Punggung & Pinggang">
+        <span class="complaint-icon">✚</span><b>Punggung & Pinggang</b><small>Nyeri punggung, pinggang kaku</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Lutut & Kaki">
+        <span class="complaint-icon">✚</span><b>Lutut & Kaki</b><small>Nyeri lutut, betis, tumit, pergelangan</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Panggul & Paha">
+        <span class="complaint-icon">✚</span><b>Panggul & Paha</b><small>Nyeri panggul, pinggul, paha</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Tangan & Lengan">
+        <span class="complaint-icon">✚</span><b>Tangan & Lengan</b><small>Nyeri siku, pergelangan, jari kaku</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Otot & Jaringan Lunak">
+        <span class="complaint-icon">✚</span><b>Otot & Jaringan Lunak</b><small>Otot tegang, kram, pegal</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Cedera Olahraga">
+        <span class="complaint-icon">✚</span><b>Cedera Olahraga</b><small>Keluhan setelah olahraga/aktivitas</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Postur & Gerak">
+        <span class="complaint-icon">✚</span><b>Postur & Gerak</b><small>Gerak terbatas, postur kurang nyaman</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Kesemutan & Kebas">
+        <span class="complaint-icon">✚</span><b>Kesemutan & Kebas</b><small>Kesemutan pada tangan atau kaki</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Pascaaktivitas">
+        <span class="complaint-icon">✚</span><b>Pascaaktivitas</b><small>Kelelahan dan pegal setelah bekerja</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Pemulihan Cedera">
+        <span class="complaint-icon">✚</span><b>Pemulihan Cedera</b><small>Keluhan sisa cedera yang telah diperiksa</small>
+      </button>
+      <button class="complaint-card" type="button" data-complaint="Keluhan Lainnya">
+        <span class="complaint-icon">＋</span><b>Keluhan Lainnya</b><small>Tuliskan keluhan Anda sendiri</small>
+      </button>
+    </div>
+    <div class="complaint-foot">Pilih kategori untuk mencari terapis yang sesuai. Ini bukan diagnosis medis.</div>
+    <div id="serviceGrid" hidden></div>
+  </section>
+  <section class="section map-section" id="memberMapSection">
+    <div class="section-head"><div><div class="eyebrow dark">JARINGAN ANGGOTA</div><h2>Peta anggota SATRIA</h2></div><span class="count" id="mapMemberCount">Memuat…</span></div>
+    <p class="small-muted">Semua anggota terverifikasi dengan lokasi praktik yang disetujui tampil di peta, termasuk saat sedang tutup praktik.</p>
+    <div class="map-tools">
+      <input id="mapSearch" type="search" placeholder="Cari nama anggota atau kota…" aria-label="Cari anggota atau kota">
+      <select id="mapServiceFilter" aria-label="Filter layanan"><option value="">Semua layanan</option></select>
+    </div>
+    <div id="satriaMap" role="application" aria-label="Peta lokasi praktik anggota SATRIA"></div>
+    <div id="mapMemberList" class="map-member-list"></div>
+    <p class="map-footnote">Lokasi yang ditampilkan adalah alamat praktik yang dipublikasikan anggota, bukan lokasi GPS pribadi.</p>
+  </section>
+  <section class="section" id="providers">
+    <div class="section-head"><div><div class="eyebrow dark">MITRA TERSEDIA</div><h2>Temukan terapis SATRIA</h2></div><span class="count" id="providerCount">Memuat…</span></div>
+    <p class="small-muted" id="providerMessage">Memuat daftar terapis terverifikasi…</p>
+    <div id="providerGrid" class="provider-grid"></div>
+  </section>
+  <section class="robot-banner"><img src="robot-satria.png" alt="Robot SATRIA"><div><span class="eyebrow">BERSAMA • BERKARYA • BERBAGI</span><h2>Terhubung dengan<br>terapis SATRIA di wilayah Anda</h2><p>Jaringan recovery dalam satu aplikasi.</p></div></section>
+  <section class="section booking-section">
+    <div class="section-head"><div><div class="eyebrow dark">MULAI PEMESANAN</div><h2>Bagaimana layanan dilakukan?</h2></div></div>
+    <div class="method-grid">
+      <button class="method-card active" data-method="clinic"><span>⌂</span><b>Datang ke tempat terapis</b><small>Pilih klinik atau lokasi praktik</small></button>
+      <button class="method-card" data-method="home"><span>➜</span><b>Panggilan ke rumah</b><small>Terapis datang ke alamat Anda</small></button>
+    </div>
+    <div class="notice"><b>Perlu diketahui</b><span>Daftar mitra dan tarif akan ditampilkan setelah mitra SATRIA GO terverifikasi dan mengaktifkan layanannya.</span></div>
+    <button class="btn btn-primary full" id="startBooking">Lanjut pilih terapis <span>→</span></button>
+    <p class="small-muted" id="catalogMessage">Menghubungkan katalog layanan SATRIA GO…</p>
+  </section>
+  <section class="section review-section" id="reviewSection">
+    <div class="eyebrow dark">PENGALAMAN PELANGGAN</div><h2>Beri rating dan ulasan</h2>
+    <p class="small-muted">Ulasan hanya dapat dikirim untuk pesanan yang sudah berstatus selesai.</p>
+    <form id="reviewForm" class="review-form">
+      <label>Kode pesanan<input name="kode_pesanan" required placeholder="Masukkan kode pesanan"></label>
+      <label>Nomor WhatsApp saat memesan<input name="whatsapp" required inputmode="tel" placeholder="08xxxxxxxxxx"></label>
+      <label>Rating
+        <select name="rating" required><option value="">Pilih bintang</option><option value="5">★★★★★ — Sangat puas</option><option value="4">★★★★ — Puas</option><option value="3">★★★ — Cukup</option><option value="2">★★ — Kurang</option><option value="1">★ — Tidak puas</option></select>
+      </label>
+      <label>Ulasan (opsional)<textarea name="ulasan" rows="3" maxlength="1000" placeholder="Ceritakan pengalaman layanan Anda"></textarea></label>
+      <button class="btn btn-primary full" type="submit">Kirim ulasan</button><p id="reviewMessage" class="small-muted" role="status"></p>
+    </form>
+  </section>
+  <section class="section trust">
+    <div class="eyebrow dark">JARINGAN SATRIA</div><h2>Terhubung dengan anggota terverifikasi</h2>
+    <p>Profil mitra, layanan, dan ketersediaan ditampilkan berdasarkan data yang diizinkan untuk publik.</p>
+    <div class="trust-points"><span>✓ Verifikasi mitra</span><span>✓ Pemesanan tanpa akun</span><span>✓ Status pesanan</span></div>
+  </section>
+</main>
+<footer><img src="logo-satria.png" alt="Logo SATRIA"><b>SATRIA GO</b><span>Seduluran Terapis Recovery Indonesia</span><small>Platform pemesanan layanan terapi. Bukan layanan diagnosis atau gawat darurat.</small></footer>
+
+<div class="modal-backdrop" id="bookingModal" hidden>
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="close" id="closeModal" aria-label="Tutup">×</button>
+    <div class="eyebrow dark">FORM PEMESANAN</div><h2 id="modalTitle">Data pelanggan</h2>
+    <p class="modal-intro">Isi kontak dan kebutuhan Anda. Tidak perlu membuat akun.</p>
+    <form id="bookingForm">
+      <label>Nama lengkap<input name="name" required maxlength="100" placeholder="Nama Anda"></label>
+      <label>Nomor WhatsApp<input name="whatsapp" required inputmode="tel" maxlength="20" placeholder="08xxxxxxxxxx"></label>
+      <label>Jenis kelamin pasien<select name="patient_gender" id="patientGender" required><option value="">Pilih jenis kelamin</option><option value="wanita">Wanita</option><option value="pria">Pria</option></select></label>
+      <small class="tariff-hint">Zifora, Sartinah, dan Anna khusus menerima pasien wanita.</small>
+      <label>Pilih terapis<select id="providerSelect" name="anggota_id" required><option value="">Pilih terapis</option></select></label>
+      <select id="serviceSelect" name="service_id" hidden aria-hidden="true" tabindex="-1"><option value="1">Penanganan keluhan</option></select>
+      <label>Pilih paket terapi<select id="packageSelect" name="package_id" required><option value="">Pilih terapis terlebih dahulu</option></select></label>
+      <div class="package-detail" id="packageDetail" aria-live="polite">Pilih terapis untuk melihat paket, harga, durasi, dan rincian tindakan.</div>
+      <small class="tariff-hint" id="tariffHint">Pilih terapis untuk melihat tarif dan durasi.</small>
+      <input type="hidden" name="method" value="clinic">
+      <label>Keluhan<textarea name="complaint" id="complaintField" rows="3" maxlength="1000" placeholder="Tuliskan keluhan atau bagian tubuh yang ingin ditangani"></textarea></label>
+      <label>Wilayah / alamat<textarea name="address" rows="2" placeholder="Kota, kecamatan, alamat (wajib diisi)"></textarea></label>
+      <div class="two-fields"><label>Tanggal<input name="date" type="date" required></label><label>Jam<input name="time" type="time" required></label></div>
+      <div class="notice compact">Pemesanan baru dikirim setelah mitra dipilih dan tersedia. Jangan mengirim informasi medis sensitif yang tidak diperlukan.</div>
+      <button class="btn btn-primary full" type="submit">Kirim permintaan <span>→</span></button>
+      <p class="small-muted" id="formMessage" role="status"></p>
+    </form>
+  </section>
+</div>
+<script src="config.js"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script src="app.js"></script>
+</body></html>

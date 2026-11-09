@@ -1,0 +1,500 @@
+:root{--ink:#15171c;--red:#d10b1d;--red2:#ff2638;--red-dark:#780b16;--paper:#f5f5f6;--muted:#6f737b;--line:#e1e2e5;--silver:#fdfdfe;--gold:#d6a53a}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:linear-gradient(180deg,#f1f1f3,#fff 45%,#f4f4f5);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.topbar{min-height:76px;padding:10px max(18px,calc((100vw - 1080px)/2));display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.96);position:sticky;top:0;z-index:5;border-bottom:3px solid var(--red);box-shadow:0 4px 18px #1111}.brand{display:flex;gap:12px;align-items:center;color:var(--ink);text-decoration:none}.brand-logo{width:56px;height:56px;object-fit:contain}.brand b{display:block;letter-spacing:.06em;font-size:19px;font-weight:950}.brand b em{font-style:italic;color:var(--red)}.brand small{display:block;font-size:9px;letter-spacing:.12em;color:var(--muted);margin-top:3px}.icon-btn{border:1px solid #e1e1e4;background:linear-gradient(#fff,#eee);border-radius:15px;width:46px;height:46px;font-size:27px;color:var(--red);box-shadow:0 3px 8px #0000000d}main{max-width:1080px;margin:auto;padding:0 20px}.hero{margin:22px 0 0;padding:34px 30px 28px;border:1px solid #e4e4e6;border-bottom:5px solid var(--red);border-radius:25px;background:radial-gradient(circle at 82% 30%,#ffccd1 0,transparent 35%),linear-gradient(120deg,#fff 0%,#f1f1f3 55%,#fff 100%);color:var(--ink);overflow:hidden;display:flex;align-items:center;justify-content:space-between;min-height:350px;box-shadow:0 14px 28px #17171d16;position:relative}.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,transparent 55%,#d10b1d0b 55%);pointer-events:none}.hero-copy{position:relative;z-index:1;max-width:58%}.hero-robot{position:absolute;right:2%;bottom:-18%;height:112%;width:43%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 10px 12px #0003)}.eyebrow{font-size:10px;letter-spacing:.17em;font-weight:900;color:var(--red)}.eyebrow.dark{color:var(--red)}h1{font-size:clamp(36px,7vw,62px);line-height:1.02;letter-spacing:-.05em;margin:18px 0 12px;font-weight:950}h1 em{font-style:normal;color:var(--red)}.hero p{max-width:480px;color:#4d5058;line-height:1.65;font-size:15px}.hero-actions{display:flex;align-items:center;gap:18px;margin-top:25px}.btn{border:0;border-radius:13px;padding:14px 18px;font-weight:850;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:18px;cursor:pointer}.btn-light{background:linear-gradient(135deg,#fff,#eee);color:var(--ink);border:1px solid #ddd;box-shadow:0 5px 12px #0002}.btn-primary{background:linear-gradient(110deg,var(--red-dark),var(--red),var(--red2));color:white;box-shadow:0 6px 14px #d10b1d35}.full{width:100%}.hero-note{font-size:12px;color:#656873}.location-strip{margin:16px 0 36px;padding:15px 17px;background:linear-gradient(110deg,#fff,#f1f1f3);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:16px;display:flex;align-items:center;gap:13px;box-shadow:0 6px 18px #0000000b}.pin{width:42px;height:42px;border-radius:13px;background:#ffe5e8;color:var(--red);display:grid;place-items:center;font-size:24px}.location-strip small,.location-strip b{display:block}.location-strip small{font-size:9px;letter-spacing:.12em;color:var(--muted);margin-bottom:4px}.location-strip b{font-size:13px}.text-btn{margin-left:auto;border:1px solid #f1a0a8;background:#fff5f6;border-radius:10px;padding:10px 12px;color:var(--red);font-weight:850}.section{margin:38px 0}.section-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:18px}h2{font-size:clamp(23px,4vw,32px);letter-spacing:-.035em;margin:7px 0 0;font-weight:900}.count,.small-muted{color:var(--muted);font-size:12px}.service-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.service-card{min-height:125px;text-align:center;padding:15px 10px;border:1px solid #e1e1e4;border-bottom:4px solid #c9c9ce;border-radius:17px;background:linear-gradient(145deg,#fff,#f4f4f6);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;cursor:pointer;box-shadow:0 5px 12px #0000000a;transition:.18s}.service-card span{font-size:30px;color:var(--red);font-weight:900}.service-card b{font-size:14px}.service-card small{color:var(--muted);font-size:11px}.service-card.selected{border-color:#ed9ba3;border-bottom-color:var(--red);background:linear-gradient(145deg,#fff,#fff0f1);box-shadow:0 0 0 1px #e72a3a33,0 7px 15px #d10b1d16}.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.method-card{background:linear-gradient(145deg,#fff,#f5f5f6);border:1px solid var(--line);border-radius:17px;padding:18px;text-align:left;display:grid;gap:8px;color:var(--ink);cursor:pointer;box-shadow:0 4px 12px #00000009}.method-card span{font-size:24px;color:var(--red)}.method-card small{color:var(--muted)}.method-card.active{border:2px solid var(--red);background:#fff4f5}.notice{margin:17px 0;padding:14px 16px;background:#f2f2f4;border-left:4px solid var(--red);border-radius:13px;display:grid;gap:5px;font-size:12px;line-height:1.55;color:#555963}.notice b{color:var(--ink)}.compact{font-size:11px}.booking-section{background:linear-gradient(145deg,#fff,#f4f4f5);padding:25px;border-radius:22px;border:1px solid var(--line);box-shadow:0 8px 20px #0000000b}.robot-banner{margin:35px 0 25px;min-height:170px;display:flex;align-items:center;gap:12px;overflow:hidden;padding:15px 22px;border-radius:22px;background:linear-gradient(110deg,#650b15,#c90018 55%,#ed172b);color:#fff;box-shadow:0 10px 20px #9a091d33;position:relative}.robot-banner img{width:145px;height:165px;object-fit:contain;object-position:center bottom;align-self:flex-end;margin-bottom:-18px;filter:drop-shadow(0 5px 6px #0005)}.robot-banner .eyebrow{color:#ffd9dd}.robot-banner h2{font-size:clamp(20px,4vw,29px);line-height:1.1}.robot-banner p{font-size:12px;color:#ffe1e4;margin-bottom:0}.trust{padding:25px 0 45px}.trust p{color:var(--muted);max-width:580px;line-height:1.6}.trust-points{display:flex;flex-wrap:wrap;gap:10px}.trust-points span{padding:9px 12px;background:#fff0f1;border:1px solid #f3c3c8;border-radius:99px;color:#9b1421;font-size:11px;font-weight:800}footer{background:linear-gradient(120deg,#17181d,#3a0b11);color:#fff;padding:27px 20px;text-align:center;display:grid;justify-items:center;gap:7px;border-top:4px solid var(--red)}footer img{width:68px;height:68px;object-fit:contain}footer span,footer small{color:#d6d6da;font-size:11px}.modal-backdrop{position:fixed;inset:0;background:#090a0dc2;z-index:10;display:grid;place-items:end center;padding:12px}.modal-backdrop[hidden]{display:none}.modal{width:min(100%,560px);max-height:92vh;overflow:auto;background:linear-gradient(145deg,#fff,#f7f7f8);border-top:5px solid var(--red);border-radius:23px;padding:25px;position:relative;box-shadow:0 15px 45px #0005}.close{position:absolute;right:17px;top:12px;border:0;background:none;font-size:30px;color:var(--muted)}.modal-intro{color:var(--muted);font-size:13px}form{display:grid;gap:13px}label{display:grid;gap:6px;font-size:12px;font-weight:800}input,select,textarea{width:100%;border:1px solid #d7d8dc;border-radius:10px;padding:12px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}input:focus,select:focus,textarea:focus{outline:2px solid #e8a0a7;border-color:var(--red)}textarea{resize:vertical}.two-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(min-width:720px){.modal-backdrop{place-items:center}.hero{margin-top:30px}.service-grid{grid-template-columns:repeat(4,1fr)}}@media(max-width:600px){main{padding:0 14px}.hero{padding:29px 21px 27px;min-height:365px;border-radius:20px;align-items:flex-start}.hero-copy{max-width:78%}.hero h1{font-size:clamp(35px,9vw,49px)}.hero p{max-width:75%;font-size:13px}.hero-robot{height:66%;width:57%;right:-5%;bottom:-3%;opacity:.98}.service-grid{grid-template-columns:repeat(2,1fr)}.service-card{min-height:112px}.booking-section{padding:19px}.method-grid{grid-template-columns:1fr}.hero-actions{align-items:flex-start;flex-direction:column;gap:12px}.location-strip{gap:9px}.text-btn{font-size:11px;padding:9px}.robot-banner{min-height:150px;padding:12px 14px}.robot-banner img{width:115px;height:150px;margin-left:-10px}.robot-banner h2{font-size:20px}.robot-banner p{font-size:11px}.brand-logo{width:49px;height:49px}.brand b{font-size:17px}}@media(max-width:360px){.hero-copy{max-width:85%}.hero-robot{opacity:.55}.two-fields{grid-template-columns:1fr}}
+
+/* Aksesibilitas: tipografi lebih besar dan nyaman dibaca di layar HP */
+.brand b{font-size:clamp(21px,4vw,24px)}
+.brand small{font-size:12px;letter-spacing:.10em}
+.eyebrow{font-size:12px;letter-spacing:.15em}
+.hero p{font-size:clamp(16px,2.2vw,18px);line-height:1.7}
+.hero-note{font-size:14px}
+.btn{font-size:17px;padding:16px 20px}
+.location-strip small{font-size:12px}
+.location-strip b{font-size:16px;line-height:1.45}
+.text-btn{font-size:14px;padding:12px 14px}
+.count,.small-muted{font-size:14px;line-height:1.55}
+.service-card b{font-size:16px;line-height:1.35}
+.service-card small{font-size:13px;line-height:1.4}
+.method-card b{font-size:17px;line-height:1.4}
+.method-card small{font-size:14px;line-height:1.5}
+.notice{font-size:14px;line-height:1.65}
+.compact{font-size:13px}
+.robot-banner p{font-size:14px;line-height:1.55}
+.trust p{font-size:16px}
+.trust-points span{font-size:13px}
+footer span,footer small{font-size:13px;line-height:1.5}
+footer>b{font-size:19px}
+.modal-intro{font-size:16px;line-height:1.55}
+label{font-size:15px;line-height:1.4}
+input,select,textarea{font-size:16px;padding:14px}
+.close{font-size:34px}
+@media(max-width:600px){
+  .brand b{font-size:20px}
+  .brand small{font-size:11px}
+  .eyebrow{font-size:12px}
+  .hero p{font-size:15px;line-height:1.65;max-width:78%}
+  .hero-note{font-size:14px}
+  .btn{font-size:17px}
+  .location-strip small{font-size:11px}
+  .location-strip b{font-size:15px}
+  .text-btn{font-size:13px;padding:11px 12px}
+  .count,.small-muted{font-size:13px}
+  .service-card b{font-size:16px}
+  .service-card small{font-size:13px}
+  .method-card b{font-size:17px}
+  .method-card small{font-size:14px}
+  .notice{font-size:14px}
+  .robot-banner p{font-size:13px}
+  .trust p{font-size:15px}
+  .trust-points span{font-size:13px}
+  footer span,footer small{font-size:13px}
+  .modal-intro{font-size:15px}
+  label{font-size:15px}
+  input,select,textarea{font-size:16px}
+}
+
+/* Headline halaman depan: pesan utama SATRIA GO */
+.hero-copy{max-width:100%}
+.hero h1{max-width:100%;font-size:clamp(34px,7.5vw,54px);line-height:1.04}
+.hero-robot{opacity:.34}
+@media(max-width:600px){
+  .hero{min-height:440px}
+  .hero-copy{max-width:100%;width:100%}
+  .hero h1{font-size:clamp(32px,8vw,43px);max-width:100%;line-height:1.05}
+  .hero p{max-width:82%;font-size:15px}
+  .hero-robot{height:58%;width:52%;right:-7%;bottom:-2%;opacity:.30}
+}
+
+/* Direktori mitra SATRIA GO */
+.provider-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.provider-card,.provider-empty{border:1px solid var(--line);border-left:4px solid var(--red);border-radius:16px;background:linear-gradient(145deg,#fff,#f3f3f5);padding:16px;text-align:left;display:flex;flex-direction:column;gap:8px;color:var(--ink);box-shadow:0 5px 14px #0000000a}
+.provider-card{cursor:pointer}
+.provider-card.selected{border-color:#e78a94;background:linear-gradient(145deg,#fff,#fff0f1);box-shadow:0 0 0 1px #d10b1d22}
+.provider-card b{font-size:17px}
+.provider-card span{font-size:13px;color:#555b64;line-height:1.45}
+.provider-card small{font-size:12px;color:var(--muted)}
+.provider-empty{grid-column:1/-1;color:var(--muted);font-size:14px;line-height:1.5}
+.tariff-hint{display:block;color:var(--red-dark);font-weight:750;font-size:13px;margin-top:-8px}
+@media(max-width:600px){.provider-grid{grid-template-columns:1fr}.provider-card b{font-size:18px}.provider-card span{font-size:14px}.provider-card small{font-size:13px}}
+
+/* Beranda SATRIA GO: kategori keluhan tampil langsung tanpa perlu scroll */
+.hero{min-height:190px;padding:20px 22px 18px;margin-top:12px;border-radius:18px}
+.hero-copy{max-width:72%;width:72%}
+.hero h1{font-size:clamp(27px,6vw,40px);line-height:1.02;margin:8px 0}
+.hero p{font-size:13px;line-height:1.35;margin:6px 0}
+.hero-actions{margin-top:10px;gap:10px}
+.hero .btn{padding:9px 13px;font-size:13px}
+.hero-note{font-size:11px}
+.hero-robot{height:105%;width:36%;right:0;bottom:-14%;opacity:.42}
+.location-strip{margin:9px 0 10px;padding:8px 11px}
+.location-strip .pin{width:30px;height:30px;font-size:18px}
+.location-strip small{font-size:9px}
+.location-strip b{font-size:12px}
+.location-strip .text-btn{font-size:11px;padding:7px}
+.complaint-section{margin:10px 0 24px}
+.complaint-heading{display:flex;align-items:end;justify-content:space-between;margin-bottom:10px}
+.complaint-heading h2{font-size:22px;margin:3px 0}
+.complaint-heading p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.complaint-heading .eyebrow{font-size:10px}
+.complaint-heading .count{font-size:10px;white-space:nowrap}
+.complaint-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.complaint-card{min-height:78px;border:1px solid #e2e2e5;border-bottom:3px solid #c9c9ce;border-radius:12px;background:linear-gradient(145deg,#fff,#f2f2f4);padding:7px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;color:var(--ink);box-shadow:0 3px 8px #0000000a;cursor:pointer}
+.complaint-card .complaint-icon{width:21px;height:21px;border-radius:50%;display:grid;place-items:center;background:#ffe6e9;color:var(--red);font-size:14px;font-weight:900}
+.complaint-card b{font-size:10px;line-height:1.12}
+.complaint-card small{font-size:8px;line-height:1.15;color:var(--muted)}
+.complaint-card.selected{border-color:#dc7781;border-bottom-color:var(--red);background:#fff0f1}
+.complaint-foot{text-align:center;font-size:9px;color:var(--muted);padding:7px 0 0}
+@media(max-width:600px){
+  .hero{min-height:170px;padding:16px 15px 13px;margin-top:9px}
+  .hero-copy{max-width:78%;width:78%}
+  .hero h1{font-size:clamp(25px,6.4vw,34px);line-height:1.03}
+  .hero p{font-size:11px;max-width:100%}
+  .hero-robot{height:90%;width:39%;right:-3%;bottom:-7%;opacity:.32}
+  .hero-actions{margin-top:7px}
+  .hero .btn{font-size:11px;padding:8px 10px}
+  .hero-note{font-size:9px}
+  .location-strip{margin:7px 0 8px}
+  .complaint-section{margin:8px 0 20px}
+  .complaint-heading{margin-bottom:8px}
+  .complaint-heading h2{font-size:20px}
+  .complaint-grid{gap:6px}
+  .complaint-card{min-height:74px;padding:6px 3px}
+  .complaint-card b{font-size:9px}
+  .complaint-card small{font-size:7.5px}
+  .complaint-card .complaint-icon{width:19px;height:19px;font-size:12px}
+}
+@media(max-width:360px){
+  .complaint-card{min-height:70px}
+  .complaint-card b{font-size:8px}
+  .complaint-card small{font-size:7px}
+}
+
+/* Pastikan identitas banner SATRIA GO dan maskot tetap terlihat di beranda */
+.hero-robot{opacity:.58;filter:drop-shadow(0 8px 12px #0004)}
+@media(max-width:600px){.hero-robot{opacity:.48;height:94%;width:41%;right:-2%;bottom:-6%}}
+
+/* Revisi beranda: banner lebih ringkas, pilihan keluhan lebih besar */
+@media(max-width:600px){
+  .hero{min-height:142px;padding:12px 14px 10px;margin-top:8px;border-radius:16px}
+  .hero-copy{max-width:72%;width:72%}
+  .hero h1{font-size:clamp(21px,5.7vw,29px);line-height:1.02;margin:5px 0}
+  .hero p{font-size:10px;line-height:1.25;max-width:100%;margin:4px 0}
+  .hero-actions{margin-top:6px;gap:7px}
+  .hero .btn{font-size:10px;padding:7px 9px;border-radius:10px}
+  .hero-note{font-size:9px}
+  .hero-robot{height:82%;width:39%;right:-2%;bottom:-5%;opacity:.52}
+  .location-strip{margin:7px 0 10px;padding:9px 11px}
+  .complaint-section{margin:11px 0 22px}
+  .complaint-heading{margin-bottom:10px}
+  .complaint-heading h2{font-size:22px}
+  .complaint-heading p{font-size:12px}
+  .complaint-heading .eyebrow{font-size:11px}
+  .complaint-heading .count{font-size:11px}
+  .complaint-grid{gap:8px}
+  .complaint-card{min-height:112px;padding:10px 5px;gap:6px;border-radius:14px}
+  .complaint-card .complaint-icon{width:27px;height:27px;font-size:17px}
+  .complaint-card b{font-size:12px;line-height:1.2}
+  .complaint-card small{font-size:10px;line-height:1.25}
+  .complaint-foot{font-size:10px}
+}
+@media(max-width:360px){
+  .hero{min-height:136px}
+  .complaint-card{min-height:106px}
+  .complaint-card b{font-size:11px}
+  .complaint-card small{font-size:9px}
+}
+
+.package-detail{padding:13px 14px;border:1px solid #f0c3c8;border-left:4px solid var(--red);border-radius:12px;background:linear-gradient(135deg,#fff,#fff3f4);font-size:13px;line-height:1.55;color:#42454d;min-height:48px}.package-detail b{color:var(--red-dark)}.package-detail .package-price{display:block;font-size:20px;font-weight:950;color:var(--red);margin:3px 0}.package-detail ul{margin:7px 0 0;padding-left:19px}.package-detail .package-duration{font-weight:800;color:var(--ink)}
+
+/* Foto dan identitas mitra dari tabel anggota */
+.provider-avatar{width:76px;height:76px;object-fit:cover;border-radius:16px;border:2px solid #fff;box-shadow:0 2px 10px #0002;background:#eee}
+.provider-clinic{font-size:12px!important;font-weight:800;color:var(--red-dark)!important}
+
+
+/* Perbaikan formulir pemesanan: dropdown paket nyaman di layar HP */
+#bookingForm label {
+  display: block;
+  min-width: 0;
+}
+#bookingForm select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 12px 40px 12px 14px;
+  border: 1px solid #d9d9df;
+  border-radius: 12px;
+  background-color: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.35;
+  white-space: normal;
+}
+#bookingForm #packageSelect {
+  border: 1.5px solid #d98a93;
+  box-shadow: 0 0 0 3px #d10b1d0d;
+  font-weight: 750;
+}
+#bookingForm select:focus {
+  outline: 2px solid #d10b1d;
+  outline-offset: 2px;
+}
+#packageDetail {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  #bookingForm select {
+    min-height: 52px;
+    padding: 12px 36px 12px 12px;
+    font-size: 14px;
+  }
+  #bookingForm #packageSelect {
+    font-size: 14px;
+  }
+  .package-detail {
+    padding: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .package-detail .package-price {
+    font-size: 22px;
+  }
+}
+
+
+/* Elemen service_id adalah referensi internal, bukan pilihan pelanggan.
+   Pastikan atribut hidden tidak tertimpa aturan tampilan dropdown. */
+#bookingForm select[hidden],
+#bookingForm [hidden] {
+  display: none !important;
+}
+
+/* Rincian tindakan paket harus terbaca dan tidak terpotong di ponsel. */
+#packageDetail {
+  display: block;
+  min-height: 72px;
+  overflow-wrap: anywhere;
+}
+#packageDetail ul {
+  display: block;
+  margin: 8px 0 2px;
+  padding-left: 22px;
+}
+#packageDetail li {
+  display: list-item;
+  margin: 4px 0;
+}
+
+/* Peta anggota SATRIA GO */
+.map-tools{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin:14px 0}
+.map-tools input,.map-tools select{width:100%;min-width:0;padding:13px;border:1px solid #ddd;border-radius:12px;background:#fff;font:inherit}
+#satriaMap{height:360px;min-height:300px;border-radius:18px;border:1px solid #ddd;z-index:1;overflow:hidden}
+.map-member-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}
+.map-member{display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid #e6e6e9;border-radius:14px;background:#fff}
+.map-member>span{font-size:12px;color:#626773}
+.practice-state{font-size:12px;font-weight:800}.practice-state.is-open{color:#16834a}.practice-state.is-closed{color:#777}
+.map-member-actions{display:flex;gap:9px;margin-top:7px;align-items:stretch}
+.map-member-actions .map-directions,.map-member-actions .map-contact{flex:1;min-width:0;min-height:46px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;padding:10px 12px;border:1px solid #b20d25;border-radius:10px;background:#fff;color:#b20d25;text-decoration:none;text-align:center;font:inherit;font-size:13px;font-weight:850;white-space:nowrap}
+.map-member-actions .map-contact{background:#b20d25;color:#fff}
+.map-member-actions .map-directions:active,.map-member-actions .map-contact:active{transform:scale(.98)}
+@media(max-width:520px){.map-member-actions{gap:8px}.map-member-actions .map-directions,.map-member-actions .map-contact{min-height:48px;font-size:14px}}
+.map-footnote{font-size:11px;color:#737782;margin-top:10px}
+@media(max-width:520px){.map-tools{grid-template-columns:1fr}#satriaMap{height:320px}}
+
+.review-form{display:grid;gap:12px;max-width:620px;margin-top:16px;padding:18px;border:1px solid #e5e5e9;border-radius:16px;background:#fff}
+.review-form label{display:grid;gap:7px;font-size:13px;font-weight:800}
+.review-form input,.review-form select,.review-form textarea{width:100%;padding:13px;border:1px solid #ddd;border-radius:11px;font:inherit;font-weight:500}
+
+/* Foto anggota sebagai marker dan kartu direktori pada peta SATRIA GO */
+.satria-photo-marker-wrap{background:transparent;border:0}
+.satria-photo-marker{display:block;width:54px;height:54px;padding:3px;border:3px solid #b20d25;border-radius:50%;background:#fff;box-shadow:0 3px 12px #0004;overflow:hidden}
+.satria-photo-marker img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
+.map-member-head{display:flex;align-items:center;gap:11px}
+.map-member-photo{width:58px;height:58px;border-radius:50%;border:2px solid #b20d25;object-fit:cover;background:#f3f3f3;flex:0 0 auto}
+.map-member-identity{display:flex;flex-direction:column;gap:4px;min-width:0}
+.map-member-identity b{font-size:14px}
+.map-member-identity span{font-size:12px;color:#626773}
+.map-no-coord{color:#8a5a00;font-size:11px}
+.map-member-actions .map-contact,.satria-map-popup-actions a{display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border-radius:9px;background:#b20d25;color:#fff;text-decoration:none;font-size:12px;font-weight:800}
+.satria-map-popup{min-width:210px;max-width:260px;font:13px/1.4 system-ui,sans-serif}
+.satria-map-popup-head{display:flex;align-items:center;gap:9px}
+.satria-map-popup-head img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #b20d25}
+.satria-map-popup-head div{display:flex;flex-direction:column;gap:3px}
+.satria-map-popup-head small{color:#626773}
+.satria-map-popup p{margin:8px 0;color:#4c5058}
+.satria-map-popup-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.satria-map-popup-actions a:last-child{background:#30343b}
+
+/* Popup peta SATRIA GO: layanan, tarif, paket, dan tombol kontak */
+.satria-map-popup{min-width:235px;max-width:290px;font:13px/1.45 system-ui,sans-serif;color:#252932}
+.satria-map-popup-services{margin:8px 0 4px}
+.satria-map-services{margin:8px 0 4px;color:#424750}
+.satria-map-starting{margin:5px 0 7px;padding:7px 9px;border-radius:8px;background:#fff3f4;color:#8f1024}
+.satria-map-packages{margin:7px 0;padding:7px 9px;background:#f6f7f9;border-radius:8px}
+.satria-map-packages ul{list-style:none;padding:0;margin:4px 0 0}
+.satria-map-packages li{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-top:1px solid #e4e6e9;font-size:12px}
+.satria-map-popup-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.satria-map-popup-actions a{flex:1;min-width:90px;text-align:center}
+.satria-map-popup-actions a.map-wa{background:#16834a}
+.satria-map-popup-actions a.map-directions{background:#30343b}
+
+
+/* Popup peta SATRIA GO: lebar stabil untuk Android dan desktop */
+.leaflet-popup { max-width: calc(100vw - 32px) !important; }
+.leaflet-popup-content-wrapper {
+  width: auto !important;
+  max-width: calc(100vw - 48px) !important;
+  box-sizing: border-box;
+}
+.leaflet-popup-content {
+  width: min(230px, calc(100vw - 112px)) !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 112px) !important;
+  max-height: 40vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 10px 12px;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+.satria-map-popup {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: normal;
+  font: 12px/1.4 system-ui, sans-serif;
+}
+.satria-map-popup-head { display:flex; align-items:center; gap:8px; min-width:0; }
+.satria-map-popup-head img { flex:0 0 44px; width:44px; height:44px; }
+.satria-map-popup-head > div { flex:1 1 auto; min-width:0; overflow-wrap:break-word; word-break:normal; }
+.satria-map-popup-head b { display:block; overflow-wrap:break-word; word-break:normal; }
+.satria-map-popup-head small { display:block; overflow-wrap:break-word; word-break:normal; }
+.satria-map-popup p { overflow-wrap:break-word; word-break:normal; }
+.satria-map-popup-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.satria-map-popup-actions a { display:flex; align-items:center; justify-content:center; min-width:0; min-height:38px; box-sizing:border-box; padding:8px 5px; text-align:center; white-space:normal; overflow-wrap:normal; font-size:11px; }
+.satria-map-popup-actions a.map-wa { background:#16834a; }
+.satria-map-popup-actions a.map-directions { background:#30343b; }
+@media (max-width: 380px) {
+  .leaflet-popup-content { width: min(220px, calc(100vw - 112px)) !important; max-width:calc(100vw - 112px) !important; margin:9px 11px; }
+}
+
+/* SATRIA GO compact map popup - final mobile sizing */
+.leaflet-popup-content-wrapper {
+  max-width: calc(100vw - 40px) !important;
+  border-radius: 14px !important;
+}
+.leaflet-popup-content {
+  width: 198px !important;
+  max-width: calc(100vw - 88px) !important;
+  max-height: 42vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin: 9px 10px !important;
+  box-sizing: border-box !important;
+}
+.satria-map-popup {
+  width: 100% !important;
+  max-width: 100% !important;
+  font-size: 11px !important;
+  line-height: 1.32 !important;
+}
+.satria-map-popup-head { gap: 7px !important; }
+.satria-map-popup-head img {
+  width: 40px !important;
+  height: 40px !important;
+  flex-basis: 40px !important;
+}
+.satria-map-popup-head b { font-size: 12px !important; }
+.satria-map-popup-head small { font-size: 10px !important; }
+.satria-map-popup p { margin: 6px 0 !important; }
+.satria-map-starting, .satria-map-packages { padding: 6px 7px !important; margin: 6px 0 !important; }
+.satria-map-packages li { font-size: 10px !important; gap: 5px !important; }
+.satria-map-popup-actions { gap: 6px !important; margin-top: 7px !important; }
+.satria-map-popup-actions a { min-height: 34px !important; font-size: 10px !important; padding: 6px 4px !important; }
+@media (max-width: 480px) {
+  .leaflet-popup-content { width: 190px !important; max-width: calc(100vw - 88px) !important; max-height: 40vh !important; }
+}
+
+
+/* V4: popup lebih kompak, aman dari kontrol zoom, dan tombol tetap mudah dijangkau */
+.leaflet-popup { max-width: calc(100vw - 56px) !important; }
+.leaflet-popup-content-wrapper { max-width: calc(100vw - 56px) !important; border-radius: 13px !important; }
+.leaflet-popup-content {
+  width: 176px !important;
+  max-width: calc(100vw - 112px) !important;
+  max-height: 44vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin: 8px 9px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch;
+}
+.satria-map-popup { width:100% !important; max-width:100% !important; font-size:11px !important; line-height:1.35 !important; }
+.satria-map-popup-head { gap:6px !important; align-items:center !important; }
+.satria-map-popup-head img { width:36px !important; height:36px !important; flex-basis:36px !important; }
+.satria-map-popup-head > div { min-width:0 !important; }
+.satria-map-popup-head b { font-size:11px !important; }
+.satria-map-popup-head small { font-size:10px !important; }
+.satria-map-popup p { margin:5px 0 !important; }
+.satria-map-starting,.satria-map-packages { padding:5px 6px !important; margin:5px 0 !important; }
+.satria-map-packages li { font-size:10px !important; gap:4px !important; }
+.satria-map-popup-actions { display:grid !important; grid-template-columns:1fr 1fr !important; gap:5px !important; margin-top:7px !important; }
+.satria-map-popup-actions a { min-width:0 !important; min-height:36px !important; padding:6px 3px !important; font-size:10px !important; white-space:normal !important; }
+@media (max-width:480px) { .leaflet-popup-content { width:176px !important; max-width:calc(100vw - 112px) !important; max-height:44vh !important; } }
+
+
+/* V5: compact popup fits inside map viewport; scroll content to reach actions */
+.leaflet-popup-content-wrapper { max-width: min(188px, calc(100vw - 64px)) !important; }
+.leaflet-popup-content {
+  width: 158px !important;
+  max-width: calc(100vw - 92px) !important;
+  max-height: 32vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin: 7px 8px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch;
+}
+.satria-map-popup { width:100% !important; max-width:100% !important; font-size:10px !important; line-height:1.28 !important; }
+.satria-map-popup-head img { width:32px !important; height:32px !important; flex-basis:32px !important; }
+.satria-map-popup-head b { font-size:10px !important; }
+.satria-map-popup-head small { font-size:9px !important; }
+.satria-map-popup p { margin:4px 0 !important; }
+.satria-map-starting,.satria-map-packages { padding:4px 5px !important; margin:4px 0 !important; }
+.satria-map-packages li { font-size:9px !important; gap:3px !important; padding:2px 0 !important; }
+.satria-map-popup-actions { display:grid !important; grid-template-columns:1fr 1fr !important; gap:4px !important; margin-top:5px !important; }
+.satria-map-popup-actions a { min-width:0 !important; min-height:32px !important; padding:5px 2px !important; font-size:9px !important; white-space:normal !important; }
+@media (max-width:480px) { .leaflet-popup-content { width:158px !important; max-width:calc(100vw - 92px) !important; max-height:32vh !important; } }
+
+/* Alur pencarian pasien berbasis kota/kabupaten, tanpa kewajiban GPS */
+.patient-search-section{padding:22px;background:linear-gradient(145deg,#fff,#f5f5f6);border:1px solid var(--line);border-left:5px solid var(--red);border-radius:20px;box-shadow:0 8px 20px #0000000a}
+.patient-search-section>p{max-width:720px}
+.patient-search-form{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:18px}
+.patient-search-form label:nth-child(3),.patient-search-form button{grid-column:1/-1}
+.patient-search-form label{display:grid;gap:6px}
+@media(max-width:600px){.patient-search-section{padding:18px}.patient-search-form{grid-template-columns:1fr}.patient-search-form label,.patient-search-form button{grid-column:1}}
+
+/* Brand tempat terapi tampil tepat di bawah nama anggota */
+.map-member-clinic{display:block;color:var(--red-dark);font-size:12px;font-weight:800;line-height:1.35;margin-top:2px}
+
+
+/* Kartu anggota: tombol peta dan status praktik otomatis */
+.provider-card {
+  cursor: default;
+  align-items: stretch;
+  gap: 9px;
+  padding: 16px;
+}
+.provider-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.provider-identity > div { display: grid; gap: 4px; min-width: 0; }
+.provider-identity b { font-size: 18px; line-height: 1.25; }
+.provider-card .provider-avatar {
+  width: 76px; height: 76px; flex: 0 0 76px;
+  border-radius: 50%; object-fit: cover;
+}
+.provider-address { color: #555b64; font-size: 14px; line-height: 1.45; }
+.provider-card .practice-state { font-size: 13px; font-weight: 900; }
+.provider-card-actions { display: flex; gap: 9px; margin-top: 5px; }
+.provider-map-link, .provider-book-button {
+  flex: 1; min-width: 0; min-height: 46px; padding: 11px 12px;
+  border-radius: 11px; display: inline-flex; align-items: center;
+  justify-content: center; text-align: center; text-decoration: none;
+  font: inherit; font-size: 14px; font-weight: 850; cursor: pointer;
+}
+.provider-map-link { background: #fff; color: var(--ink); border: 1px solid #d9d9df; }
+.provider-book-button { background: var(--red); color: #fff; border: 1px solid var(--red); }
+.provider-book-button:disabled { background: #e5e7eb; color: #6b7280; border-color: #d1d5db; cursor: not-allowed; opacity: 1; }
+.provider-verified-badge { display: inline-block; color: #16834a; font-weight: 800; font-size: 11px; margin-top: 4px; }
+.practice-state.is-open { color: #16834a !important; }
+.practice-state.is-closed { color: #777 !important; }
+@media(max-width:600px) {
+  .provider-card { padding: 16px; }
+  .provider-card-actions { gap: 8px; }
+  .provider-map-link, .provider-book-button { font-size: 14px; min-height: 48px; }
+}
+
+.women-only-badge{display:inline-block;margin-top:7px;padding:5px 9px;border-radius:7px;background:#fff0f1;color:#a10d24;font-size:11px;font-weight:900;letter-spacing:.045em;border:1px solid #efb8c0}
+
+
+/* Informasi biaya Home Visit: nominal dikonfirmasi melalui WhatsApp */
+.home-visit-fee-note {
+  display: block;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: #fff7e8;
+  border: 1px solid #f2dfb7;
+  color: #76521a !important;
+  font-size: 12px !important;
+  line-height: 1.45;
+  font-weight: 650;
+}

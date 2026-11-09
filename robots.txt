@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://satria-go.pages.dev/sitemap.xml
