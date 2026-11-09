@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Pendaftaran Mitra — SATRIA GO</title>
+<style>
+:root{--red:#c90016;--ink:#19191d;--muted:#68707b}*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.top{background:#171216;color:#fff;padding:17px 20px;border-bottom:4px solid var(--red);font-weight:900;letter-spacing:.04em}.wrap{max-width:720px;margin:26px auto;padding:0 14px 40px}.card{background:#fff;border:1px solid #e1e3e8;border-radius:18px;padding:22px;box-shadow:0 8px 28px #1111}h1{font-size:25px;margin:0 0 8px}.muted{color:var(--muted);line-height:1.55}.member{background:#f7f7f8;border-radius:12px;padding:13px;margin:16px 0;font-weight:700}.field{margin:15px 0}label{display:block;font-weight:700;margin-bottom:6px}input,textarea,select{width:100%;padding:12px;border:1px solid #cfd3da;border-radius:10px;font:inherit;background:#fff}textarea{min-height:90px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checks label{font-weight:500;border:1px solid #ddd;border-radius:9px;padding:9px}.checks input{width:auto;margin-right:6px}.btn{width:100%;border:0;border-radius:11px;padding:14px;background:var(--red);color:white;font-size:16px;font-weight:800;margin-top:12px}.btn:disabled{opacity:.5}.status{padding:12px;border-radius:10px;background:#f2f3f5;margin-top:14px;white-space:pre-wrap}.hidden{display:none}.section{font-size:17px;margin:22px 0 8px;border-bottom:1px solid #eee;padding-bottom:7px}.small{font-size:13px;color:var(--muted)}@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:17px}}
+</style></head>
+<body><header class="top">SATRIA GO · PENDAFTARAN MITRA</header><main class="wrap"><section class="card">
+<h1>Formulir Pendaftaran Mitra</h1><p class="muted">Lengkapi informasi layanan Anda. Pengajuan akan diperiksa admin SATRIA sebelum profil ditampilkan di katalog.</p>
+<div id="loading" class="status">Memeriksa undangan…</div>
+<div id="formArea" class="hidden">
+<div class="member" id="memberInfo"></div>
+<form id="applicationForm">
+<h2 class="section">Informasi layanan</h2>
+<div class="field"><label>Deskripsi / pengalaman layanan</label><textarea name="bio_layanan" required maxlength="3000" placeholder="Jelaskan pengalaman, layanan, dan informasi penting untuk pasien"></textarea></div>
+<div class="field"><label>Pilih layanan yang tersedia</label><div id="services" class="checks">Memuat layanan…</div><p class="small">Pilih layanan yang benar-benar Anda sediakan.</p></div>
+<div class="grid"><div class="field"><label>Tarif minimum (Rp)</label><input name="tarif_min" type="number" min="0" step="1000" required></div><div class="field"><label>Tarif maksimum (Rp)</label><input name="tarif_max" type="number" min="0" step="1000" required></div></div>
+<div class="grid"><div class="field"><label>Durasi minimum (menit)</label><input name="durasi_min_menit" type="number" min="1" required></div><div class="field"><label>Durasi maksimum (menit)</label><input name="durasi_max_menit" type="number" min="1" required></div></div>
+<h2 class="section">Lokasi dan kunjungan</h2>
+<div class="field"><label>Nama tempat praktik</label><input name="nama_tempat" maxlength="200" placeholder="Nama klinik / tempat praktik"></div>
+<div class="field"><label>Alamat tempat praktik</label><textarea name="alamat" maxlength="1000" placeholder="Alamat lengkap tempat praktik"></textarea></div>
+<div class="field"><label>Kota / Kabupaten</label><input name="kota" required maxlength="150" placeholder="Contoh: Ungaran, Kabupaten Semarang"></div>
+<div class="field"><label>Link Google Maps (opsional)</label><input name="maps_url" type="url" placeholder="https://maps.app.goo.gl/..."></div>
+<div class="field"><label>Jenis layanan kunjungan</label><select name="menerima_kunjungan" required><option value="clinic">Hanya praktik / klinik</option><option value="home">Hanya Home Visit</option><option value="both">Praktik dan Home Visit</option></select></div>
+<p class="small">Jika Home Visit tersedia, biaya tambahannya dikonfirmasi langsung melalui WhatsApp kepada terapis. Nominal tidak ditampilkan di website.</p>
+<button class="btn" id="submitBtn" type="submit">Kirim Pengajuan Mitra</button>
+</form></div><div id="result" class="status hidden" role="status"></div>
+</section></main>
+<script src="../config.js"></script>
+<script>
+const cfg=window.SATRIA_GO_CONFIG;
+const token=new URLSearchParams(location.search).get('token')||'';
+const loading=document.querySelector('#loading'),formArea=document.querySelector('#formArea'),result=document.querySelector('#result');
+let member=null,services=[];
+function showResult(message){result.textContent=message;result.classList.remove('hidden');}
+async function init(){
+ if(!token){loading.textContent='Tautan undangan tidak memiliki token. Hubungi admin SATRIA.';return;}
+ try{
+  const r=await fetch(cfg.functionsBaseUrl+'/validate-mitra-invite',{method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.publishableKey},body:JSON.stringify({token})});
+  const d=await r.json();if(!r.ok||!d.valid)throw new Error(d.error||'Undangan tidak valid.');
+  member=d.anggota;document.querySelector('#memberInfo').textContent='Anggota SATRIA: '+member.nama+(member.kota?' · '+member.kota:'');
+  const cr=await fetch(cfg.functionsBaseUrl+'/public-catalog',{headers:{'apikey':cfg.publishableKey},cache:'no-store'});
+  if(!cr.ok)throw new Error('Daftar layanan belum dapat dimuat.');const cd=await cr.json();services=Array.isArray(cd.services)?cd.services:[];
+  const box=document.querySelector('#services');box.innerHTML='';
+  services.forEach(s=>{const label=document.createElement('label');const cb=document.createElement('input');cb.type='checkbox';cb.value=String(s.id);cb.dataset.name=s.nama||s.name||'';label.append(cb,document.createTextNode(s.nama||s.name||'Layanan'));box.append(label);});
+  if(!services.length)box.textContent='Belum ada layanan aktif. Hubungi admin SATRIA.';
+  loading.classList.add('hidden');formArea.classList.remove('hidden');
+ }catch(e){loading.textContent=e.message||'Undangan tidak dapat diperiksa. Hubungi admin SATRIA.';}
+}
+document.querySelector('#applicationForm').addEventListener('submit',async e=>{
+ e.preventDefault();const f=e.currentTarget,fd=new FormData(f);const chosen=[...document.querySelectorAll('#services input:checked')];
+ if(!chosen.length){showResult('Pilih minimal satu layanan terapi.');return;}
+ const min=Number(fd.get('tarif_min')),max=Number(fd.get('tarif_max')),dmin=Number(fd.get('durasi_min_menit')),dmax=Number(fd.get('durasi_max_menit'));
+ if(max<min||dmax<dmin){showResult('Nilai maksimum tidak boleh lebih kecil dari nilai minimum.');return;}
+ const data={bio_layanan:String(fd.get('bio_layanan')).trim(),tarif_min:min,tarif_max:max,durasi_min_menit:dmin,durasi_max_menit:dmax,menerima_kunjungan:fd.get('menerima_kunjungan'),menerima_panggilan:['home','both'].includes(fd.get('menerima_kunjungan')),lokasi:{nama_tempat:String(fd.get('nama_tempat')||'').trim(),alamat:String(fd.get('alamat')||'').trim(),kota:String(fd.get('kota')||'').trim(),maps_url:String(fd.get('maps_url')||'').trim()},services:chosen.map(x=>({service_id:Number(x.value),nama:x.dataset.name})),packages:[]};
+ const btn=document.querySelector('#submitBtn');btn.disabled=true;btn.textContent='Mengirim pengajuan…';
+ try{const r=await fetch(cfg.functionsBaseUrl+'/submit-mitra-application',{method:'POST',headers:{'Content-Type':'application/json','apikey':cfg.publishableKey},body:JSON.stringify({token,data})});const out=await r.json();if(!r.ok||!out.success)throw new Error(out.error||'Pengajuan gagal dikirim.');f.classList.add('hidden');formArea.querySelector('.member').classList.add('hidden');showResult('Pengajuan berhasil dikirim. Status: MENUNGGU PERSETUJUAN ADMIN. Nomor pengajuan: '+out.application_id+'. Admin SATRIA akan memeriksa data Anda.');
+ }catch(err){showResult(err.message||'Terjadi kesalahan saat mengirim pengajuan.');btn.disabled=false;btn.textContent='Kirim Pengajuan Mitra';}
+});
+init();
+</script></body></html>
