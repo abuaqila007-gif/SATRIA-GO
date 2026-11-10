@@ -379,13 +379,26 @@ function renderMemberMap(items = providers) {
     });
     mapMarkers.push(marker);
   });
-  // Fokus awal di Jawa Tengah agar peta tidak mengecil terlalu jauh karena anggota lintas provinsi.
-  // Semua pin tetap tersedia; pengguna dapat zoom out untuk melihat wilayah lain.
+  // Otomatis tampilkan seluruh lokasi yang sedang cocok dengan pencarian/filter.
+  // Koordinat marker tetap asli; hanya batas tampilan peta yang disesuaikan.
   if (locationGroups.length === 1) {
-    satriaMap.setView([locationGroups[0].center.latitude,locationGroups[0].center.longitude],14);
+    const point = locationGroups[0].center;
+    satriaMap.setView([point.latitude, point.longitude], 14, { animate: false });
   } else if (locationGroups.length > 1) {
-    satriaMap.setView([-7.15,110.40],8);
+    const bounds = L.latLngBounds(
+      locationGroups.map(group => [group.center.latitude, group.center.longitude])
+    );
+    if (bounds.isValid()) {
+      // Beri ruang di tepi agar marker tidak terpotong pada layar ponsel.
+      satriaMap.fitBounds(bounds, {
+        padding: [32, 32],
+        maxZoom: 9,
+        animate: false
+      });
+    }
   }
+  // Pastikan Leaflet menghitung ulang ukuran setelah layout halaman selesai.
+  requestAnimationFrame(() => satriaMap && satriaMap.invalidateSize({ pan: false }));
 }
 
 function formatMapPrice(value) {
