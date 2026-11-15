@@ -48,6 +48,9 @@ export async function onRequest(context) {
 </style>`;
 
     let html = await page.text();
+    // The homepage contains a static, crawlable directory as a fallback.
+    // Avoid duplicating it; keep the dynamic injection for future pages without one.
+    if (html.includes('id="satria-seo-directory"')) return page;
     if (html.includes("</main>")) {
       html = html.replace("</main>", directory + "\n</main>");
     } else if (html.includes("</body>")) {
