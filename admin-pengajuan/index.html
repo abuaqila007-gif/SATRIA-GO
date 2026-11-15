@@ -46,8 +46,8 @@
       <div>
         <label for="fFoto">URL foto</label><input id="fFoto" type="url" placeholder="URL foto atau unggah dari galeri">
         <label for="fFotoFile">Upload foto dari galeri</label>
-        <input id="fFotoFile" type="file" accept="image/*">
-        <div class="muted">Format gambar JPG, PNG, WebP, atau gambar lain. Maksimal 5 MB.</div>
+        <input id="fFotoFile" type="file" accept="image/jpeg,image/png,image/webp">
+        <div class="muted">Format JPG, PNG, atau WebP. Maksimal 20 MB.</div>
         <img id="fotoPreview" class="hidden" alt="Pratinjau foto anggota" style="display:block;max-width:150px;max-height:150px;object-fit:cover;border-radius:12px;margin-top:10px">
         <div class="muted" id="fotoUploadMsg" role="status"></div>
       </div>
@@ -193,8 +193,8 @@
  async function uploadMemberPhoto(memberId){
    const file=$('fFotoFile').files?.[0];
    if(!file)return null;
-   if(!file.type.startsWith('image/'))throw new Error('Pilih file gambar dari galeri.');
-   if(file.size>10*1024*1024)throw new Error('Ukuran foto maksimal 10 MB.');
+   if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Format foto harus JPG, PNG, atau WebP.');
+   if(file.size>20*1024*1024)throw new Error('Ukuran foto maksimal 20 MB.');
    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
    const path='anggota/'+memberId+'/'+Date.now()+'-'+crypto.randomUUID()+'.'+ext;
    $('fotoUploadMsg').textContent='Mengunggah foto…';
@@ -208,8 +208,8 @@
  $('fFotoFile').addEventListener('change',()=>{
    const file=$('fFotoFile').files?.[0];
    if(!file)return;
-   if(!file.type.startsWith('image/')){$('fotoUploadMsg').textContent='File harus berupa gambar.';$('fFotoFile').value='';return;}
-   if(file.size>10*1024*1024){$('fotoUploadMsg').textContent='Ukuran foto maksimal 10 MB.';$('fFotoFile').value='';return;}
+   if(!['image/jpeg','image/png','image/webp'].includes(file.type)){$('fotoUploadMsg').textContent='Format foto harus JPG, PNG, atau WebP.';$('fFotoFile').value='';return;}
+   if(file.size>20*1024*1024){$('fotoUploadMsg').textContent='Ukuran foto maksimal 20 MB.';$('fFotoFile').value='';return;}
    const url=URL.createObjectURL(file);$('fotoPreview').src=url;$('fotoPreview').classList.remove('hidden');$('fotoUploadMsg').textContent='Pratinjau foto siap. Tekan Simpan Anggota untuk mengunggah.';
  });
  $('fFoto').addEventListener('input',()=>{if(val('fFoto')){$('fotoPreview').src=val('fFoto');$('fotoPreview').classList.remove('hidden');}});
