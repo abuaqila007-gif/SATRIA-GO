@@ -27,6 +27,55 @@
 <div class="status" id="inviteMsg" role="status">Daftar anggota akan dimuat setelah admin masuk.</div>
 <div id="inviteResult" class="hidden"></div>
 </section>
+
+<section class="panel" id="managePanel">
+  <h2>Manajemen Anggota SATRIA GO</h2>
+  <p class="muted">Tambah dan ubah data anggota, status layanan, tarif, durasi, serta lokasi praktik. Pengaturan tampilkan lokasi tetap terpisah.</p>
+  <label for="manageSearch">Cari anggota (nama, kota, atau ID)</label>
+  <input id="manageSearch" type="search" placeholder="Cari nama, kota, atau ID…">
+  <div class="actions"><button class="primary" id="addMemberBtn">+ Tambah Anggota</button><button class="secondary" id="reloadManageBtn">Muat Ulang</button></div>
+  <div class="status" id="manageMsg" role="status">Memuat data anggota…</div>
+  <div id="manageList"></div>
+  <div id="memberEditor" class="panel hidden" style="margin-top:14px">
+    <h2 id="editorTitle">Tambah Anggota</h2>
+    <input id="editId" type="hidden">
+    <div class="grid">
+      <div><label for="fNama">Nama lengkap *</label><input id="fNama" required></div>
+      <div><label for="fKota">Kota</label><input id="fKota"></div>
+      <div><label for="fWa">WhatsApp</label><input id="fWa" inputmode="tel"></div>
+      <div><label for="fFoto">URL foto</label><input id="fFoto" type="url"></div>
+      <div><label for="fKlinik">Nama klinik / tempat praktik</label><input id="fKlinik"></div>
+      <div><label for="fLanding">URL profil / website</label><input id="fLanding" type="url"></div>
+      <div><label for="fLokasiUrl">URL Google Maps</label><input id="fLokasiUrl" type="url"></div>
+      <div><label for="fAktif">Status anggota</label><select id="fAktif"><option value="false">Nonaktif</option><option value="true">Aktifkan anggota</option></select></div>
+    </div>
+    <label for="fBio">Bio anggota</label><textarea id="fBio" rows="2"></textarea>
+    <label for="fLayanan">Daftar layanan (teks profil)</label><textarea id="fLayanan" rows="2"></textarea>
+    <div class="grid">
+      <div><label for="fBioLayanan">Bio layanan SATRIA GO</label><textarea id="fBioLayanan" rows="2"></textarea></div>
+      <div><label for="fKunjungan">Jenis kunjungan</label><select id="fKunjungan"><option value="both">Klinik dan panggilan</option><option value="clinic">Klinik saja</option><option value="home">Panggilan saja</option></select></div>
+      <div><label for="fTarifMin">Tarif minimum (Rp)</label><input id="fTarifMin" type="number" min="0"></div>
+      <div><label for="fTarifMax">Tarif maksimum (Rp)</label><input id="fTarifMax" type="number" min="0"></div>
+      <div><label for="fDurMin">Durasi minimum (menit)</label><input id="fDurMin" type="number" min="1"></div>
+      <div><label for="fDurMax">Durasi maksimum (menit)</label><input id="fDurMax" type="number" min="1"></div>
+    </div>
+    <h3>Layanan dan tarif per layanan</h3><div class="muted">Centang layanan yang ditawarkan, lalu isi tarif dan durasi bila diperlukan.</div>
+    <div id="serviceEditor" class="status">Memuat daftar layanan…</div>
+    <h3>Lokasi praktik</h3>
+    <div class="grid">
+      <div><label for="fNamaTempat">Nama tempat</label><input id="fNamaTempat"></div>
+      <div><label for="fKotaLokasi">Kota lokasi</label><input id="fKotaLokasi"></div>
+      <div><label for="fAlamat">Alamat lengkap</label><textarea id="fAlamat" rows="2"></textarea></div>
+      <div><label for="fRadius">Radius panggilan (km)</label><input id="fRadius" type="number" min="0" step="0.1" value="10"></div>
+      <div><label for="fLat">Latitude</label><input id="fLat" type="number" step="any"></div>
+      <div><label for="fLng">Longitude</label><input id="fLng" type="number" step="any"></div>
+    </div>
+    <label><input id="fTampilkanLokasi" type="checkbox" style="width:auto;margin-right:8px">Tampilkan lokasi kepada pelanggan</label>
+    <div class="actions"><button class="primary" id="saveMemberBtn">Simpan Anggota</button><button class="secondary" id="cancelEditorBtn">Batal</button></div>
+    <div class="status" id="editorMsg" role="status">Periksa kembali data sebelum menyimpan.</div>
+  </div>
+</section>
+
 <div class="filters" id="filters"><button class="active secondary" data-status="pending">Menunggu</button><button class="secondary" data-status="revision_requested">Perbaikan</button><button class="secondary" data-status="approved">Disetujui</button><button class="secondary" data-status="rejected">Ditolak</button><button class="secondary" data-status="all">Semua</button></div>
 <div class="status" id="listMsg" role="status">Memuat pengajuan…</div></div><div id="list"></div>
 </section>
@@ -43,8 +92,8 @@
  let currentStatus='pending', allMembers=[];
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function showSession(ok){loginPanel.classList.toggle('hidden',ok);dashboard.classList.toggle('hidden',!ok);}
- async function checkSession(){const {data}=await client.auth.getSession();showSession(!!data.session);if(data.session){loadApplications();loadMembers();}}
- $('loginBtn').addEventListener('click',async()=>{loginMsg.textContent='Memeriksa akun…';const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){loginMsg.textContent='Gagal masuk: '+error.message;return;}showSession(true);await Promise.all([loadApplications(),loadMembers()]);});
+ async function checkSession(){const {data}=await client.auth.getSession();showSession(!!data.session);if(data.session){loadApplications();loadMembers();loadManageData();}}
+ $('loginBtn').addEventListener('click',async()=>{loginMsg.textContent='Memeriksa akun…';const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){loginMsg.textContent='Gagal masuk: '+error.message;return;}showSession(true);await Promise.all([loadApplications(),loadMembers(),loadManageData()]);});
  $('logoutBtn').addEventListener('click',async()=>{await client.auth.signOut();showSession(false);loginMsg.textContent='Anda sudah keluar.';});
  $('filters').addEventListener('click',async e=>{const b=e.target.closest('button[data-status]');if(!b)return;currentStatus=b.dataset.status;document.querySelectorAll('#filters button').forEach(x=>x.classList.toggle('active',x===b));await loadApplications();});
  async function loadApplications(){listMsg.textContent='Memuat pengajuan…';list.innerHTML='';const {data,error}=await client.rpc('get_satria_go_applications',{p_status:currentStatus});if(error){listMsg.textContent='Tidak dapat memuat: '+error.message;return;}const rows=Array.isArray(data)?data:[];listMsg.textContent=rows.length?`Ditemukan ${rows.length} pengajuan.`:'Belum ada pengajuan pada kategori ini.';rows.forEach(renderItem);}
@@ -55,6 +104,103 @@
  $('reloadMembersBtn').addEventListener('click',loadMembers);
  $('createInviteBtn').addEventListener('click',createInvite);
  async function createInvite(){const id=Number($('memberSelect').value);const member=allMembers.find(m=>m.id===id);if(!member)return;const btn=$('createInviteBtn'),msg=$('inviteMsg'),result=$('inviteResult');if(!confirm(`Buat undangan mitra untuk ${member.nama} (ID ${member.id})? Undangan berlaku 7 hari dan hanya dapat dipakai sekali.`))return;btn.disabled=true;msg.textContent='Membuat undangan aman…';result.classList.add('hidden');result.innerHTML='';const {data,error}=await client.functions.invoke('create-mitra-invite',{body:{anggota_id:id}});if(error){let detail=error.message||'Terjadi kesalahan';try{const body=error.context&&await error.context.json();if(body?.error)detail=body.error;}catch{}msg.textContent='Gagal membuat undangan: '+detail;btn.disabled=false;return;}if(!data?.success||!data?.invite_url){msg.textContent=data?.error||'Respons fungsi tidak sesuai. Undangan belum dapat ditampilkan.';btn.disabled=false;return;}const inviteUrl=String(data.invite_url);const waMessage=String(data.whatsapp_message||`Halo ${member.nama}, silakan lengkapi pendaftaran mitra SATRIA GO melalui tautan ini: ${inviteUrl}`);const wa=String(data.anggota?.whatsapp||member.whatsapp||'').replace(/[^0-9]/g,'').replace(/^0/,'62');const expires=data.expires_at?new Date(data.expires_at).toLocaleString('id-ID'):'7 hari sejak dibuat';result.innerHTML=`<div class="status"><b>Undangan berhasil dibuat untuk ${esc(data.anggota?.nama||member.nama)}.</b><br>Berlaku sampai: ${esc(expires)}<br><label for="inviteUrlOutput">Tautan undangan</label><input id="inviteUrlOutput" readonly value="${esc(inviteUrl)}"><div class="actions"><button type="button" class="primary" id="copyInviteBtn">Salin Tautan</button>${wa?'<button type="button" class="success" id="shareInviteBtn">Kirim WhatsApp</button>':''}</div></div>`;result.classList.remove('hidden');$('copyInviteBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(inviteUrl);$('copyInviteBtn').textContent='Tersalin';}catch{$('inviteUrlOutput').select();document.execCommand('copy');$('copyInviteBtn').textContent='Tersalin';}});if(wa)$('shareInviteBtn').addEventListener('click',()=>window.open(`https://wa.me/${wa}?text=${encodeURIComponent(waMessage)}`,'_blank','noopener'));msg.textContent='Undangan dibuat. Kirim tautan kepada anggota sebelum masa berlaku habis.';await loadMembers();}
+
+ // Manajemen anggota SATRIA GO
+ let manageRows=[], serviceCatalog=[];
+ const val=id=>$(id).value.trim();
+ const numOrNull=id=>val(id)===''?null:Number(val(id));
+ async function loadManageData(){
+   const msg=$('manageMsg');msg.textContent='Memuat anggota…';
+   const [a,p,l,s]=await Promise.all([
+     client.from('anggota').select('id,nama,kota,foto_url,layanan,whatsapp,bio,aktif,klinik,landing_url,lokasi_url').order('nama').limit(1000),
+     client.from('satria_go_profiles').select('anggota_id,status_verifikasi,menerima_pesanan,menerima_panggilan,menerima_kunjungan,bio_layanan,tarif_min,tarif_max,durasi_min_menit,durasi_max_menit'),
+     client.from('satria_go_locations').select('anggota_id,nama_tempat,alamat,kota,latitude,longitude,radius_panggilan_km,tampilkan_lokasi'),
+     client.from('satria_go_services').select('id,nama,deskripsi').eq('aktif',true).order('nama')
+   ]);
+   if(a.error){msg.textContent='Gagal memuat anggota: '+a.error.message;return;}
+   if(p.error){msg.textContent='Gagal memuat profil: '+p.error.message;return;}
+   if(l.error){msg.textContent='Gagal memuat lokasi: '+l.error.message;return;}
+   if(s.error){msg.textContent='Gagal memuat katalog layanan: '+s.error.message;return;}
+   const pm=new Map((p.data||[]).map(x=>[String(x.anggota_id),x]));
+   const lm=new Map((l.data||[]).map(x=>[String(x.anggota_id),x]));
+   manageRows=(a.data||[]).map(x=>({...x,profile:pm.get(String(x.id))||{},location:lm.get(String(x.id))||{}}));
+   serviceCatalog=s.data||[];renderManageList();msg.textContent='Data anggota: '+manageRows.length+' orang.';
+ }
+ function renderManageList(){
+   const q=val('manageSearch').toLowerCase(),root=$('manageList');root.innerHTML='';
+   const rows=manageRows.filter(m=>!q||[m.nama,m.kota,String(m.id)].some(v=>String(v||'').toLowerCase().includes(q)));
+   if(!rows.length){root.innerHTML='<div class="status">Anggota tidak ditemukan.</div>';return;}
+   rows.forEach(m=>{
+     const el=document.createElement('div');el.className='item';
+     el.innerHTML='<div class="itemhead"><div><b>'+esc(m.nama)+'</b><div class="muted">ID '+esc(m.id)+' · '+esc(m.kota||'Kota belum diisi')+'</div></div><span class="pill">'+(m.aktif?'Aktif':'Nonaktif')+'</span></div><p class="muted">Verifikasi: '+esc(m.profile.status_verifikasi||'belum ada profil')+' · Pesanan: '+(m.profile.menerima_pesanan?'Aktif':'Nonaktif')+' · Panggilan: '+(m.profile.menerima_panggilan?'Aktif':'Nonaktif')+'</p><button class="secondary editMemberBtn">Edit Data</button>';
+     el.querySelector('button').addEventListener('click',()=>openMemberEditor(m));root.append(el);
+   });
+ }
+ function resetEditor(){
+   ['editId','fNama','fKota','fWa','fFoto','fKlinik','fLanding','fLokasiUrl','fBio','fLayanan','fBioLayanan','fTarifMin','fTarifMax','fDurMin','fDurMax','fNamaTempat','fKotaLokasi','fAlamat','fLat','fLng'].forEach(id=>$(id).value='');
+   $('fAktif').value='false';$('fKunjungan').value='both';$('fRadius').value='10';$('fTampilkanLokasi').checked=false;
+   renderServiceEditor([]);
+ }
+ function renderServiceEditor(existing=[]){
+   const map=new Map(existing.map(x=>[String(x.service_id),x]));
+   $('serviceEditor').innerHTML=serviceCatalog.length?serviceCatalog.map(s=>{
+     const old=map.get(String(s.id))||{},checked=!!old.aktif;
+     return '<div class="item" style="box-shadow:none;margin:8px 0;padding:10px"><label style="margin:0"><input type="checkbox" class="svcCheck" data-id="'+esc(s.id)+'" style="width:auto;margin-right:8px" '+(checked?'checked':'')+'>'+esc(s.nama)+'</label><div class="grid"><div><label>Tarif (Rp)</label><input class="svcTarif" data-id="'+esc(s.id)+'" type="number" min="0" value="'+esc(old.tarif??'')+'"></div><div><label>Durasi (menit)</label><input class="svcDurasi" data-id="'+esc(s.id)+'" type="number" min="1" value="'+esc(old.durasi_menit??'')+'"></div></div></div>';
+   }).join(''):'Belum ada layanan aktif di katalog.';
+ }
+ async function openMemberEditor(m=null){
+   resetEditor();$('editorTitle').textContent=m?'Edit Anggota · ID '+m.id:'Tambah Anggota Baru';
+   if(m){
+     $('editId').value=m.id;
+     const fields={fNama:m.nama,fKota:m.kota,fWa:m.whatsapp,fFoto:m.foto_url,fKlinik:m.klinik,fLanding:m.landing_url,fLokasiUrl:m.lokasi_url,fBio:m.bio,fLayanan:m.layanan,fBioLayanan:m.profile.bio_layanan,fTarifMin:m.profile.tarif_min,fTarifMax:m.profile.tarif_max,fDurMin:m.profile.durasi_min_menit,fDurMax:m.profile.durasi_max_menit,fNamaTempat:m.location.nama_tempat,fKotaLokasi:m.location.kota,fAlamat:m.location.alamat,fLat:m.location.latitude,fLng:m.location.longitude,fRadius:m.location.radius_panggilan_km??10};
+     Object.entries(fields).forEach(([id,v])=>$(id).value=v??'');
+     $('fAktif').value=String(!!m.aktif);$('fKunjungan').value=m.profile.menerima_kunjungan||'both';$('fTampilkanLokasi').checked=!!m.location.tampilkan_lokasi;
+     const {data,error}=await client.from('satria_go_mitra_services').select('service_id,tarif,durasi_menit,aktif').eq('anggota_id',m.id);
+     if(error){$('editorMsg').textContent='Tidak dapat memuat layanan anggota: '+error.message;return;}
+     renderServiceEditor(data||[]);
+   }
+   $('memberEditor').classList.remove('hidden');$('editorMsg').textContent='Periksa data, lalu tekan Simpan Anggota.';$('memberEditor').scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ async function saveMember(){
+   const btn=$('saveMemberBtn'),msg=$('editorMsg');const nama=val('fNama');
+   if(!nama){msg.textContent='Nama anggota wajib diisi.';return;}
+   const active=$('fAktif').value==='true',id=val('editId');
+   const memberData={nama,kota:val('fKota')||null,whatsapp:val('fWa')||null,foto_url:val('fFoto')||null,klinik:val('fKlinik')||null,landing_url:val('fLanding')||null,lokasi_url:val('fLokasiUrl')||null,bio:val('fBio')||null,layanan:val('fLayanan')||null,aktif:active};
+   btn.disabled=true;msg.textContent='Menyimpan data anggota…';
+   let memberId=id?Number(id):null;
+   let result=id?await client.from('anggota').update(memberData).eq('id',memberId).select('id').single():await client.from('anggota').insert(memberData).select('id').single();
+   if(result.error){msg.textContent='Gagal menyimpan anggota: '+result.error.message;btn.disabled=false;return;}
+   memberId=result.data.id;
+   const profile={anggota_id:memberId,status_verifikasi:active?'verified':'pending',menerima_pesanan:active,menerima_panggilan:active,menerima_kunjungan:val('fKunjungan'),bio_layanan:val('fBioLayanan')||null,tarif_min:numOrNull('fTarifMin'),tarif_max:numOrNull('fTarifMax'),durasi_min_menit:numOrNull('fDurMin'),durasi_max_menit:numOrNull('fDurMax'),updated_at:new Date().toISOString()};
+   const pr=await client.from('satria_go_profiles').upsert(profile,{onConflict:'anggota_id'});
+   if(pr.error){msg.textContent='Anggota tersimpan, tetapi profil gagal disimpan: '+pr.error.message;btn.disabled=false;return;}
+   const location={anggota_id:memberId,nama_tempat:val('fNamaTempat')||null,alamat:val('fAlamat')||null,kota:val('fKotaLokasi')||null,latitude:numOrNull('fLat'),longitude:numOrNull('fLng'),radius_panggilan_km:numOrNull('fRadius')??10,tampilkan_lokasi:$('fTampilkanLokasi').checked,updated_at:new Date().toISOString()};
+   const lr=await client.from('satria_go_locations').upsert(location,{onConflict:'anggota_id'});
+   if(lr.error){msg.textContent='Profil tersimpan, tetapi lokasi gagal disimpan: '+lr.error.message;btn.disabled=false;return;}
+   const checks=[...document.querySelectorAll('.svcCheck')],selected=checks.filter(x=>x.checked).map(x=>x.dataset.id);
+   const existing=await client.from('satria_go_mitra_services').select('service_id').eq('anggota_id',memberId);
+   if(existing.error){msg.textContent='Data anggota tersimpan, tetapi daftar layanan gagal dibaca: '+existing.error.message;btn.disabled=false;return;}
+   const allIds=[...new Set([...(existing.data||[]).map(x=>String(x.service_id)),...checks.map(x=>x.dataset.id)])];
+   for(const sid of allIds){
+     const chosen=selected.includes(sid),tarif=document.querySelector('.svcTarif[data-id="'+sid+'"]'),dur=document.querySelector('.svcDurasi[data-id="'+sid+'"]');
+     const old=(existing.data||[]).find(x=>String(x.service_id)===sid);
+     if(chosen){
+       const up=await client.from('satria_go_mitra_services').upsert({anggota_id:memberId,service_id:Number(sid),tarif:tarif&&tarif.value!==''?Number(tarif.value):0,durasi_menit:dur&&dur.value!==''?Number(dur.value):null,aktif:true},{onConflict:'anggota_id,service_id'});
+       if(up.error){msg.textContent='Data utama tersimpan, tetapi layanan '+sid+' gagal: '+up.error.message;btn.disabled=false;return;}
+     }else if(old){
+       const off=await client.from('satria_go_mitra_services').update({aktif:false}).eq('anggota_id',memberId).eq('service_id',Number(sid));
+       if(off.error){msg.textContent='Gagal menonaktifkan layanan '+sid+': '+off.error.message;btn.disabled=false;return;}
+     }
+   }
+   msg.textContent='Berhasil menyimpan anggota, profil, lokasi, dan layanan.';btn.disabled=false;
+   $('memberEditor').classList.add('hidden');await Promise.all([loadManageData(),loadMembers()]);
+ }
+ $('manageSearch').addEventListener('input',renderManageList);
+ $('reloadManageBtn').addEventListener('click',loadManageData);
+ $('addMemberBtn').addEventListener('click',()=>openMemberEditor());
+ $('saveMemberBtn').addEventListener('click',saveMember);
+ $('cancelEditorBtn').addEventListener('click',()=>$('memberEditor').classList.add('hidden'));
+
  function renderItem(a){const el=document.createElement('article');el.className='item';const d=a.data_pengajuan||{};const services=Array.isArray(d.services)?d.services.map(x=>x.nama||('ID '+x.service_id)).join(', '):'-';const loc=d.lokasi||{};const date=a.submitted_at?new Date(a.submitted_at).toLocaleString('id-ID'):'-';let mapLink='-';try{const u=new URL(loc.maps_url);if(u.protocol==='https:')mapLink=`<a href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">Buka tautan</a>`;}catch{}el.innerHTML=`<div class="itemhead"><div><h2>${esc(a.nama||'Anggota tanpa nama')}</h2><div class="muted">ID Anggota: ${esc(a.anggota_id)} • Pengajuan #${esc(a.id)}</div></div><span class="pill">${esc(a.status)}</span></div><p><b>Kota:</b> ${esc(a.kota_anggota||d.lokasi?.kota||'-')}<br><b>WhatsApp:</b> ${esc(a.whatsapp||'-')}<br><b>Dikirim:</b> ${esc(date)}</p><p><b>Layanan dipilih:</b> ${esc(services)}<br><b>Rentang tarif:</b> ${esc(d.tarif_min??'-')} – ${esc(d.tarif_max??'-')}<br><b>Durasi:</b> ${esc(d.durasi_min_menit??'-')} – ${esc(d.durasi_max_menit??'-')} menit<br><b>Lokasi praktik:</b> ${esc([loc.nama_tempat,loc.alamat,loc.kota].filter(Boolean).join(', ')||'-')}<br><b>Google Maps:</b> ${mapLink}</p><details><summary>Lihat seluruh data pengajuan</summary><pre class="detail">${esc(JSON.stringify(d,null,2))}</pre></details><label>Catatan admin</label><textarea rows="2" class="note" placeholder="Catatan untuk anggota (opsional)">${esc(a.catatan_admin||'')}</textarea><div class="actions"></div>`;
  const actions=el.querySelector('.actions');
  if(a.status==='pending'||a.status==='revision_requested'){
