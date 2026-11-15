@@ -1,203 +1,3 @@
-const cfg = window.SATRIA_GO_CONFIG;
-const servicesFallback = [
-  "Reposisi Tulang dan Sendi","Massage","Bekam / Cupping","Akupunktur",
-  "Akupresure","Sport Injury","Recovery dan Relaksasi","Panggilan ke Rumah"
-];
-let catalog = [];
-let selectedServiceName = "Reposisi Tulang dan Sendi";
-let selectedMethod = "clinic";
-let selectedServiceId = 1;
-let providers = [];
-let selectedProviderId = null;
-const requestedProviderId = new URLSearchParams(window.location.search).get("terapis");
-let selectedPackageId = null;
-let gpsPosition = null;
-let patientCity = "";
-let selectedComplaint = "";
-let patientDetails = {name:"", whatsapp:""};
-
-const $ = s => document.querySelector(s);
-const serviceGrid = $("#serviceGrid");
-const serviceSelect = $("#serviceSelect");
-const msg = $("#catalogMessage");
-
-function providerProfileSlug(provider) {
-  const name = String(provider?.nama || "terapis-satria")
-    .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  return `${name || "terapis-satria"}-${encodeURIComponent(String(provider?.anggota_id ?? ""))}`;
-}
-function slugLabel(name) {
-  const map = {"Reposisi Tulang dan Sendi":["Reposisi","Tulang & sendi"],"Massage":["Massage","Pijat terapi"],"Bekam / Cupping":["Bekam","Cupping therapy"],"Akupunktur":["Akupunktur","Terapi jarum"],"Akupresure":["Akupresure","Titik tekan"],"Sport Injury":["Sport Injury","Keluhan olahraga"],"Recovery dan Relaksasi":["Recovery","Relaksasi"],"Panggilan ke Rumah":["Home service","Terapis ke rumah"],"Bio Elektrik":["Bio Elektrik","Layanan mitra"]};
-  return map[name] || [name,"Layanan SATRIA"];
-}
-function renderServices(items) {
-  catalog = items;
-  serviceGrid.innerHTML = "";
-  serviceSelect.innerHTML = '<option value="">Pilih layanan</option>';
-  items.forEach((s,i) => {
-    const name = s.nama || s.name;
-    const [label,desc] = slugLabel(name);
-    const b = document.createElement("button");
-    b.className = "service-card" + (name === selectedServiceName ? " selected" : "");
-    b.type = "button";
-    b.innerHTML = `<span>${["✣","◉","◌","⌁","◎","↗","♡","⌂"][i%8]}</span><b></b><small></small>`;
-    b.querySelector("b").textContent = label;
-    b.querySelector("small").textContent = desc;
-    b.addEventListener("click", () => selectService(name,s.id,b));
-    serviceGrid.appendChild(b);
-    // Selalu masukkan layanan ke dropdown. ID fallback memakai ID database
-    // yang sudah diverifikasi pada tabel satria_go_services (1 sampai 8).
-    if (s.id !== undefined && s.id !== null) {
-      const opt = document.createElement("option");
-      opt.value = String(s.id);
-      opt.textContent = name;
-      serviceSelect.appendChild(opt);
-    }
-  });
-  const serviceCount = $("#serviceCount");
-  if (serviceCount) serviceCount.textContent = `${items.length} layanan`;
-  const selected = items.find(x => String(x.id) === String(selectedServiceId));
-  if (selected) {
-    selectedServiceName = selected.nama || selected.name;
-    serviceSelect.value = String(selected.id);
-  }
-}
-function selectService(name,id,button) {
-  selectedServiceName = name; selectedServiceId = id || null;
-  document.querySelectorAll(".service-card").forEach(x=>x.classList.remove("selected"));
-  button?.classList.add("selected");
-  if (id !== undefined && id !== null) serviceSelect.value = String(id);
-  const p = providers.find(x => String(x.anggota_id) === String(selectedProviderId));
-  if (p) {
-    const chosen = (p.services || []).find(x => String(x.service_id) === String(id));
-    tariffHint.textContent = chosen ? `Tarif mitra: ${formatRupiah(chosen.tarif)}` : "Layanan ini belum diaktifkan oleh mitra.";
-  }
-}
-
-const providerSelect = $("#providerSelect");
-const providerGrid = $("#providerGrid");
-const providerMessage = $("#providerMessage");
-const tariffHint = $("#tariffHint");
-const packageSelect = $("#packageSelect");
-const packageDetail = $("#packageDetail");
-
-function formatRupiah(value) {
-  if (value === null || value === undefined || value === "") return "Tarif hubungi mitra";
-  const n = Number(value);
-  return Number.isFinite(n) ? "Rp " + n.toLocaleString("id-ID") : String(value);
-}
-function distanceKm(aLat,aLon,bLat,bLon) {
-  const rad = v => v * Math.PI / 180;
-  const dLat = rad(bLat-aLat), dLon = rad(bLon-aLon);
-  const x = Math.sin(dLat/2)**2 + Math.cos(rad(aLat))*Math.cos(rad(bLat))*Math.sin(dLon/2)**2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-function providerLocation(p) {
-  const loc = (p.lokasi || [])[0];
-  return [loc?.alamat, loc?.kota || p.kota || p.klinik].filter(Boolean).join(" • ") || "Lokasi praktik belum dipublikasikan";
-}
-
-// Jadwal praktik otomatis untuk seluruh anggota: setiap hari, 09.00–21.00 WIB.
-function jakartaPracticeIsOpen(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
-  }).formatToParts(date);
-  const hour = Number(parts.find(x => x.type === "hour")?.value || 0);
-  const minute = Number(parts.find(x => x.type === "minute")?.value || 0);
-  const minutes = hour * 60 + minute;
-  return minutes >= 9 * 60 && minutes < 21 * 60;
-}
-function practiceStatusText() {
-  return jakartaPracticeIsOpen() ? "● Buka praktik" : "● Tutup praktik";
-}
-function providerMapUrl(p, loc = null) {
-  // Nur Rujiasih: buka titik koordinat yang sudah dikonfirmasi, bukan hasil pencarian nama toko/klinik.
-  if (String(p?.nama || '').trim().toLocaleLowerCase('id-ID') === 'nur rujiasih') {
-    return 'https://www.google.com/maps?q=-7.742449,110.423694';
-  }
-  // Arahkan ke nama klinik/tempat terapi, lalu sertakan alamat dan kota.
-  // Koordinat hanya menjadi cadangan jika nama/alamat tidak tersedia.
-  const place = [loc?.nama_tempat, p?.klinik, loc?.alamat, loc?.kota || p?.kota]
-    .map(x => String(x || '').trim()).filter((x, i, a) => x && a.indexOf(x) === i);
-  if (place.length) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.join(', '))}`;
-  }
-  const suppliedMap = String(p?.lokasi_url || p?.google_maps_url || '').trim();
-  if (/^https?:\/\//i.test(suppliedMap)) return suppliedMap;
-  const lat = loc?.latitude, lon = loc?.longitude;
-  if (lat != null && lon != null && lat !== '' && lon !== '') {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lon}`)}`;
-  }
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p?.kota || 'Indonesia')}`;
-}
-function renderProviderServices(p) {
-  const available = (p?.services || []).map(ps => {
-    const service = catalog.find(s => String(s.id) === String(ps.service_id));
-    return service ? {...service, tarif:ps.tarif, durasi_menit:ps.durasi_menit} : null;
-  }).filter(Boolean);
-
-  // Layanan tidak dipilih oleh pelanggan. service_id tersembunyi hanya dipakai
-  // sebagai referensi internal booking; keluhan menjadi input utama pelanggan.
-  const defaultService = available[0] || catalog[0] || {id:1, nama:"Penanganan keluhan"};
-  serviceSelect.innerHTML = `<option value="${defaultService.id}">${defaultService.nama}</option>`;
-  serviceSelect.value = String(defaultService.id);
-  selectedServiceId = defaultService.id;
-  selectedServiceName = defaultService.nama || defaultService.name || "Penanganan keluhan";
-
-  const formatRange = (min,max) => {
-    if (min == null && max == null) return "Tarif dikonfirmasi oleh terapis";
-    if (min != null && max != null) return `${formatRupiah(min)}–${formatRupiah(max)}`;
-    return formatRupiah(min ?? max);
-  };
-  const duration = p?.durasi_min_menit != null && p?.durasi_max_menit != null
-    ? `${p.durasi_min_menit}–${p.durasi_max_menit} menit`
-    : "Durasi dikonfirmasi oleh terapis";
-  const hasHomeVisit = p?.menerima_panggilan === true;
-  const availability = hasHomeVisit
-    ? "Home visit tersedia"
-    : "Hanya datang ke tempat praktik";
-  const homeVisitFeeInfo = hasHomeVisit
-    ? " Biaya tambahan Home Visit dikonfirmasi langsung melalui WhatsApp kepada terapis; nominal menyesuaikan kebijakan terapis dan lokasi kunjungan."
-    : "";
-
-  if (available.length) {
-    const servicePrices = available.map(s => formatRupiah(s.tarif)).join(", ");
-    tariffHint.textContent = `Tarif layanan: ${servicePrices}. Durasi: ${duration}. ${availability}.${homeVisitFeeInfo}`;
-  } else {
-    tariffHint.textContent = `Tarif: ${formatRange(p?.tarif_min,p?.tarif_max)}. Durasi: ${duration}. ${availability}.${homeVisitFeeInfo}`;
-  }
-  renderPackages(p);
-}
-function renderPackages(p) {
-  const packages = p?.packages || [];
-  packageSelect.innerHTML = '<option value="">Pilih paket terapi</option>';
-  selectedPackageId = null;
-  packageDetail.textContent = packages.length
-    ? "Pilih paket untuk melihat rincian tindakan."
-    : "Paket khusus belum tersedia untuk terapis ini.";
-  packages.forEach(pkg => {
-    const option = document.createElement("option");
-    option.value = String(pkg.id);
-    option.textContent = `${pkg.nama_paket} • ${formatRupiah(pkg.tarif)}`;
-    packageSelect.appendChild(option);
-  });
-  if (packages.length) {
-    packageSelect.value = String(packages[0].id);
-    showPackage(packages[0].id);
-  }
-}
-function showPackage(id) {
-  const p = providers.find(x => String(x.anggota_id) === String(selectedProviderId));
-  const pkg = (p?.packages || []).find(x => String(x.id) === String(id));
-  selectedPackageId = pkg ? pkg.id : null;
-  if (!pkg) {
-    packageDetail.textContent = "Pilih paket terapi.";
-    tariffHint.textContent = "Pilih paket untuk melihat harga dan durasi.";
-    return;
-  }
-  packageDetail.innerHTML = "";
-  const title = document.createElement("b");
   title.textContent = pkg.nama_paket;
   const price = document.createElement("span");
   price.className = "package-price";
@@ -250,15 +50,13 @@ function isEnabled(value) {
   return value === true || value === 1 || String(value ?? "").trim().toLowerCase() === "true" || String(value ?? "").trim() === "1";
 }
 function acceptsMethod(p, method) {
-  const visit = String(p?.menerima_kunjungan || "").toLowerCase();
-  if (method === "home") {
-    // Kolom menerima_panggilan adalah penentu khusus home visit.
-    // Profil dengan nilai "both" tetap tidak boleh tampil bila menerima_panggilan=false.
-    return isEnabled(p?.menerima_panggilan);
-  }
-  // Default: pelanggan datang ke tempat praktik. Profil "both" juga diterima.
-  return ["clinic", "both", "keduanya", "datang", "praktik"].includes(visit)
-    || isEnabled(p?.menerima_kunjungan);
+  const visit = String(p?.menerima_kunjungan || "").trim().toLowerCase();
+  const receivesOrders = isEnabled(p?.menerima_pesanan);
+  const receivesHomeCalls = isEnabled(p?.menerima_panggilan);
+  if (!receivesOrders) return false;
+  if (method === "home") return receivesHomeCalls;
+  // Nilai "home" tidak berarti menerima pasien di tempat praktik.
+  return ["clinic", "both", "keduanya", "datang", "praktik", "clinic_and_home", "home_and_clinic"].includes(visit);
 }
 let satriaMap = null;
 let mapMarkers = [];
@@ -365,12 +163,20 @@ function renderMemberMap(items = providers) {
       const startingPrice = prices.length ? Math.min(...prices) : null;
       const priceHtml = startingPrice !== null ? `<p class="satria-map-starting">Mulai <b>${escapeMapText(formatMapPrice(startingPrice))}</b></p>` : '<p class="satria-map-starting">Tarif dikonfirmasi dengan terapis</p>';
       const canContact = isEnabled(p?.menerima_panggilan);
-      const bookingText = isEnabled(p?.menerima_pesanan) ? 'Menerima pesanan' : 'Belum menerima pesanan';
+      const bookingText = !isEnabled(p?.menerima_pesanan)
+        ? 'Belum menerima pesanan'
+        : (String(p?.menerima_kunjungan || '').trim().toLowerCase() === 'home' && canContact)
+          ? 'Menerima pesanan • Panggilan ke rumah'
+          : 'Menerima pesanan';
       const profileUrl = `/terapis/${providerProfileSlug(p)}`;
       return `<section class="satria-map-member"><div class="satria-map-popup-head"><img src="${escapeMapText(photoUrl)}" alt=""><div><b>${escapeMapText(p.nama)}</b><small>${escapeMapText(p.klinik || loc?.nama_tempat || 'Anggota SATRIA')}</small></div></div><p>${escapeMapText(providerLocation(p) || p.kota)}</p><small>${escapeMapText(status)} • ${escapeMapText(bookingText)}</small>${servicesHtml}${priceHtml}<div class="satria-map-popup-actions">${canContact && wa ? `<a class="map-wa" href="${escapeMapText(wa)}" target="_blank" rel="noopener">WhatsApp</a>` : ''}<a class="map-directions" href="${escapeMapText(mapsUrl)}" target="_blank" rel="noopener">Petunjuk arah</a><a class="map-directions" href="${escapeMapText(profileUrl)}">Profil</a></div></section>`;
     }).join('<hr class="satria-map-member-divider">');
     const popup = `<div class="satria-map-popup">${members.length > 1 ? `<b class="satria-map-group-title">${members.length} terapis di lokasi ini</b>` : ''}${memberCards}</div>`;
     marker.bindPopup(popup, {
+      maxWidth: Math.min(280, Math.max(210, window.innerWidth - 72)),
+**Bagian 2 dari 4**
+
+```javascript
       maxWidth: Math.min(280, Math.max(210, window.innerWidth - 72)),
       minWidth: Math.min(210, Math.max(190, window.innerWidth - 100)),
       maxHeight: Math.round(window.innerHeight * 0.52),
@@ -533,9 +339,11 @@ function renderProviders(items) {
 
     const book = document.createElement("button");
     book.type = "button"; book.className = "provider-book-button";
-    book.textContent = canBook ? "Pilih / Pesan" : "Belum menerima pesanan";
+    const receivesOrders = isEnabled(p?.menerima_pesanan);
+    const homeOnly = String(p?.menerima_kunjungan || "").trim().toLowerCase() === "home" && isEnabled(p?.menerima_panggilan);
+    book.textContent = canBook ? "Pilih / Pesan" : !receivesOrders ? "Belum menerima pesanan" : homeOnly && selectedMethod !== "home" ? "Tersedia: Panggilan ke Rumah" : "Tidak melayani metode ini";
     book.disabled = !canBook;
-    if (!canBook) book.title = "Profil terverifikasi, tetapi pemesanan belum diaktifkan.";
+    if (!canBook) book.title = !receivesOrders ? "Profil terverifikasi, tetapi pemesanan belum diaktifkan." : homeOnly ? "Terapis menerima pesanan untuk panggilan ke rumah. Pilih metode Panggilan ke Rumah." : "Terapis tidak melayani metode kunjungan yang sedang dipilih.";
     book.addEventListener("click", () => {
       if (!canBook) return;
       chooseProvider(p.anggota_id);
@@ -557,11 +365,7 @@ function renderProviders(items) {
     packageSelect.innerHTML = '<option value="">Pemesanan belum tersedia</option>';
     packageDetail.textContent = "Profil ini belum membuka pemesanan.";
   }
-}
-
-
-
-// Perbarui label buka/tutup otomatis setiap menit berdasarkan jam WIB.
+}// Perbarui label buka/tutup otomatis setiap menit berdasarkan jam WIB.
 function refreshPracticeStatusLabels() {
   const isOpen = jakartaPracticeIsOpen();
   document.querySelectorAll(".practice-state").forEach(el => {
@@ -653,7 +457,6 @@ $("#patientSearchForm").addEventListener("submit", e => {
   }
 });
 $("#startBooking").addEventListener("click",()=>{
-  
   if (selectedServiceId) serviceSelect.value = String(selectedServiceId);
   $("#bookingModal").hidden=false;
 });
@@ -694,7 +497,7 @@ $("#bookingForm").addEventListener("submit",async e=>{
   if(!payload.anggota_id){status.textContent="Pilih terapis SATRIA terlebih dahulu.";return;}
   if(!payload.package_id){status.textContent="Pilih paket terapi terlebih dahulu.";return;}
   const selectedProvider = providers.find(p => String(p.anggota_id) === String(payload.anggota_id));
-  if (!selectedProvider || !acceptsMethod(selectedProvider, payload.method)) {
+  if (!selectedProvider || !isEnabled(selectedProvider.menerima_pesanan) || !acceptsMethod(selectedProvider, payload.method)) {
     status.textContent = "Terapis tersebut tidak melayani metode kunjungan yang dipilih. Silakan pilih terapis lain.";
     return;
   }
