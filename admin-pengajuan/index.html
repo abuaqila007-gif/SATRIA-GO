@@ -128,10 +128,20 @@
  async function loadServiceCatalog(){
    const box=$('serviceEditor');
    if(box)box.textContent='Memuat katalog layanan…';
-   const {data,error}=await client.from('satria_go_services').select('id,nama,deskripsi').eq('aktif',true).order('nama');
-   if(error){serviceCatalog=[];if(box)box.textContent='Gagal memuat katalog layanan: '+error.message;return false;}
-   serviceCatalog=data||[];
-   if(box)renderServiceEditor([]);
+   const {data,error}=await client.from('satria_go_services').select('id,nama,deskripsi,aktif').order('nama');
+   if(error){
+     serviceCatalog=[];
+     if(box)box.textContent='Gagal membaca satria_go_services: '+error.message+' (kode: '+(error.code||'-')+')';
+     console.error('SATRIA GO service catalog error',error);
+     return false;
+   }
+   const rows=data||[];
+   serviceCatalog=rows.filter(s=>s.aktif===true||s.aktif==='true'||s.aktif===1);
+   console.info('SATRIA GO service catalog loaded', {rows:rows.length,active:serviceCatalog.length});
+   if(box){
+     if(serviceCatalog.length)renderServiceEditor([]);
+     else box.textContent='Katalog terbaca, tetapi tidak ada layanan aktif. Jumlah baris terbaca: '+rows.length+'. Periksa apakah API mengarah ke proyek Supabase yang benar.';
+   }
    return true;
  }
  function renderManageList(){
