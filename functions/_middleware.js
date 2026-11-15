@@ -7,12 +7,13 @@ import {
   serviceNames
 } from "./_lib/catalog.js";
 
-// Add real HTML links to every public therapist profile.
-// Search crawlers can discover these URLs without executing app.js.
+// Middleware Pages Functions: continue to the static homepage, then add
+// crawlable profile links only to the homepage response.
 export async function onRequest(context) {
   const page = await context.next();
+  const pathname = new URL(context.request.url).pathname;
 
-  if (!page.ok || !(page.headers.get("content-type") || "").includes("text/html")) {
+  if (pathname !== "/" || !page.ok || !(page.headers.get("content-type") || "").includes("text/html")) {
     return page;
   }
 
@@ -67,7 +68,6 @@ export async function onRequest(context) {
       headers
     });
   } catch (error) {
-    // Keep the existing homepage available if the public catalog is unavailable.
     console.error("Homepage SEO directory error:", error);
     return page;
   }
