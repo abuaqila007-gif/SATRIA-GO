@@ -96,11 +96,19 @@
  const loginPanel=$('loginPanel'),dashboard=$('dashboard'),loginMsg=$('loginMsg'),listMsg=$('listMsg'),list=$('list');
  if(!cfg||!window.supabase){loginMsg.textContent='Konfigurasi Supabase atau library belum termuat.';return;}
  const client=window.supabase.createClient(cfg.supabaseUrl,cfg.publishableKey);
- let currentStatus='pending', allMembers=[];
+ let currentStatus='pending', allMembers=[], verifiedAdminId=null;
+ async function verifyAdmin(){
+   const {data:{user},error:userError}=await client.auth.getUser();
+   if(userError||!user){showSession(false);loginMsg.textContent='Sesi admin tidak valid. Silakan masuk kembali.';return false;}
+   const {data:adminRow,error:adminError}=await client.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();
+   if(adminError){showSession(false);loginMsg.textContent='Tidak dapat memeriksa hak admin: '+adminError.message;return false;}
+   if(!adminRow){showSession(false);loginMsg.textContent='Akun berhasil masuk, tetapi UUID akun ('+user.id+') belum terdaftar di admin_users. Gunakan akun admin yang sesuai.';return false;}
+   verifiedAdminId=user.id;return true;
+ }
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function showSession(ok){loginPanel.classList.toggle('hidden',ok);dashboard.classList.toggle('hidden',!ok);}
- async function checkSession(){const {data}=await client.auth.getSession();showSession(!!data.session);if(data.session){loadApplications();loadMembers();loadManageData();}}
- $('loginBtn').addEventListener('click',async()=>{loginMsg.textContent='Memeriksa akun…';const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){loginMsg.textContent='Gagal masuk: '+error.message;return;}showSession(true);await Promise.all([loadApplications(),loadMembers(),loadManageData()]);});
+ async function checkSession(){const {data}=await client.auth.getSession();if(data.session&&await verifyAdmin()){showSession(true);await Promise.all([loadApplications(),loadMembers(),loadManageData()]);}else showSession(false);}
+ $('loginBtn').addEventListener('click',async()=>{loginMsg.textContent='Memeriksa akun…';const {data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){loginMsg.textContent='Gagal masuk: '+error.message;return;}if(!(await verifyAdmin()))return;showSession(true);await Promise.all([loadApplications(),loadMembers(),loadManageData()]);});
  $('logoutBtn').addEventListener('click',async()=>{await client.auth.signOut();showSession(false);loginMsg.textContent='Anda sudah keluar.';});
  $('filters').addEventListener('click',async e=>{const b=e.target.closest('button[data-status]');if(!b)return;currentStatus=b.dataset.status;document.querySelectorAll('#filters button').forEach(x=>x.classList.toggle('active',x===b));await loadApplications();});
  async function loadApplications(){listMsg.textContent='Memuat pengajuan…';list.innerHTML='';const {data,error}=await client.rpc('get_satria_go_applications',{p_status:currentStatus});if(error){listMsg.textContent='Tidak dapat memuat: '+error.message;return;}const rows=Array.isArray(data)?data:[];listMsg.textContent=rows.length?`Ditemukan ${rows.length} pengajuan.`:'Belum ada pengajuan pada kategori ini.';rows.forEach(renderItem);}
@@ -217,10 +225,11 @@
    const btn=$('saveMemberBtn'),msg=$('editorMsg');const nama=val('fNama');
    if(!nama){msg.textContent='Nama anggota wajib diisi.';return;}
    const active=$('fAktif').value==='true',id=val('editId');
-   const memberData={nama,kota:val('fKota')||null,whatsapp:val('fWa')||null,foto_url:val('fFoto')||null,klinik:val('fKlinik')||null,landing_url:val('fLanding')||null,lokasi_url:val('fLokasiUrl')||null,bio:val('fBio')||null,layanan:val('fLayanan')||null,aktif:active};
+   const memberData={nama,kota:val('fKota')||null,whatsapp:val('fWa')||null,foto_url:val('fFoto')||null,klinik:val('fKlinik')||null,landing_url:val('fLanding')||null,lokasi_url:val('fLokasiUrl')||null,bio:val('fBio')||null,layanan:val('fLayanan')||null};
    btn.disabled=true;msg.textContent='Menyimpan data anggota…';
    let memberId=id?Number(id):null;
-   let result=id?await client.from('anggota').update(memberData).eq('id',memberId).select('id').single():await client.from('anggota').insert(memberData).select('id').single();
+   // Status aktif/nonaktif pada formulir ini hanya mengatur SATRIA GO, bukan status anggota utama SATRIA.
+   let result=id?await client.from('anggota').update(memberData).eq('id',memberId).select('id').single():await client.from('anggota').insert({...memberData,aktif:true}).select('id').single();
    if(result.error){msg.textContent='Gagal menyimpan anggota: '+result.error.message;btn.disabled=false;return;}
    memberId=result.data.id;
    try{
