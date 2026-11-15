@@ -111,20 +111,28 @@
  const numOrNull=id=>val(id)===''?null:Number(val(id));
  async function loadManageData(){
    const msg=$('manageMsg');msg.textContent='Memuat anggota…';
-   const [a,p,l,s]=await Promise.all([
+   const [a,p,l]=await Promise.all([
      client.from('anggota').select('id,nama,kota,foto_url,layanan,whatsapp,bio,aktif,klinik,landing_url,lokasi_url').order('nama').limit(1000),
      client.from('satria_go_profiles').select('anggota_id,status_verifikasi,menerima_pesanan,menerima_panggilan,menerima_kunjungan,bio_layanan,tarif_min,tarif_max,durasi_min_menit,durasi_max_menit'),
-     client.from('satria_go_locations').select('anggota_id,nama_tempat,alamat,kota,latitude,longitude,radius_panggilan_km,tampilkan_lokasi'),
-     client.from('satria_go_services').select('id,nama,deskripsi').eq('aktif',true).order('nama')
+     client.from('satria_go_locations').select('anggota_id,nama_tempat,alamat,kota,latitude,longitude,radius_panggilan_km,tampilkan_lokasi')
    ]);
+   await loadServiceCatalog();
    if(a.error){msg.textContent='Gagal memuat anggota: '+a.error.message;return;}
    if(p.error){msg.textContent='Gagal memuat profil: '+p.error.message;return;}
    if(l.error){msg.textContent='Gagal memuat lokasi: '+l.error.message;return;}
-   if(s.error){msg.textContent='Gagal memuat katalog layanan: '+s.error.message;return;}
    const pm=new Map((p.data||[]).map(x=>[String(x.anggota_id),x]));
    const lm=new Map((l.data||[]).map(x=>[String(x.anggota_id),x]));
    manageRows=(a.data||[]).map(x=>({...x,profile:pm.get(String(x.id))||{},location:lm.get(String(x.id))||{}}));
-   serviceCatalog=s.data||[];renderManageList();msg.textContent='Data anggota: '+manageRows.length+' orang.';
+   renderManageList();msg.textContent='Data anggota: '+manageRows.length+' orang. Katalog layanan: '+serviceCatalog.length+'.';
+ }
+ async function loadServiceCatalog(){
+   const box=$('serviceEditor');
+   if(box)box.textContent='Memuat katalog layanan…';
+   const {data,error}=await client.from('satria_go_services').select('id,nama,deskripsi').eq('aktif',true).order('nama');
+   if(error){serviceCatalog=[];if(box)box.textContent='Gagal memuat katalog layanan: '+error.message;return false;}
+   serviceCatalog=data||[];
+   if(box)renderServiceEditor([]);
+   return true;
  }
  function renderManageList(){
    const q=val('manageSearch').toLowerCase(),root=$('manageList');root.innerHTML='';
@@ -150,6 +158,8 @@
  }
  async function openMemberEditor(m=null){
    resetEditor();$('editorTitle').textContent=m?'Edit Anggota · ID '+m.id:'Tambah Anggota Baru';
+   const catalogOk=await loadServiceCatalog();
+   if(!catalogOk){$('memberEditor').classList.remove('hidden');$('editorMsg').textContent=$('serviceEditor').textContent;return;}
    if(m){
      $('editId').value=m.id;
      const fields={fNama:m.nama,fKota:m.kota,fWa:m.whatsapp,fFoto:m.foto_url,fKlinik:m.klinik,fLanding:m.landing_url,fLokasiUrl:m.lokasi_url,fBio:m.bio,fLayanan:m.layanan,fBioLayanan:m.profile.bio_layanan,fTarifMin:m.profile.tarif_min,fTarifMax:m.profile.tarif_max,fDurMin:m.profile.durasi_min_menit,fDurMax:m.profile.durasi_max_menit,fNamaTempat:m.location.nama_tempat,fKotaLokasi:m.location.kota,fAlamat:m.location.alamat,fLat:m.location.latitude,fLng:m.location.longitude,fRadius:m.location.radius_panggilan_km??10};
