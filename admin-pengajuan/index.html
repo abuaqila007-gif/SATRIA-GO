@@ -194,7 +194,7 @@
    const file=$('fFotoFile').files?.[0];
    if(!file)return null;
    if(!file.type.startsWith('image/'))throw new Error('Pilih file gambar dari galeri.');
-   if(file.size>5*1024*1024)throw new Error('Ukuran foto maksimal 5 MB.');
+   if(file.size>10*1024*1024)throw new Error('Ukuran foto maksimal 10 MB.');
    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
    const path='anggota/'+memberId+'/'+Date.now()+'-'+crypto.randomUUID()+'.'+ext;
    $('fotoUploadMsg').textContent='Mengunggah foto…';
@@ -209,7 +209,7 @@
    const file=$('fFotoFile').files?.[0];
    if(!file)return;
    if(!file.type.startsWith('image/')){$('fotoUploadMsg').textContent='File harus berupa gambar.';$('fFotoFile').value='';return;}
-   if(file.size>5*1024*1024){$('fotoUploadMsg').textContent='Ukuran foto maksimal 5 MB.';$('fFotoFile').value='';return;}
+   if(file.size>10*1024*1024){$('fotoUploadMsg').textContent='Ukuran foto maksimal 10 MB.';$('fFotoFile').value='';return;}
    const url=URL.createObjectURL(file);$('fotoPreview').src=url;$('fotoPreview').classList.remove('hidden');$('fotoUploadMsg').textContent='Pratinjau foto siap. Tekan Simpan Anggota untuk mengunggah.';
  });
  $('fFoto').addEventListener('input',()=>{if(val('fFoto')){$('fotoPreview').src=val('fFoto');$('fotoPreview').classList.remove('hidden');}});
