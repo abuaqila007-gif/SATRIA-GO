@@ -43,7 +43,14 @@
       <div><label for="fNama">Nama lengkap *</label><input id="fNama" required></div>
       <div><label for="fKota">Kota</label><input id="fKota"></div>
       <div><label for="fWa">WhatsApp</label><input id="fWa" inputmode="tel"></div>
-      <div><label for="fFoto">URL foto</label><input id="fFoto" type="url"></div>
+      <div>
+        <label for="fFoto">URL foto</label><input id="fFoto" type="url" placeholder="URL foto atau unggah dari galeri">
+        <label for="fFotoFile">Upload foto dari galeri</label>
+        <input id="fFotoFile" type="file" accept="image/*">
+        <div class="muted">Format gambar JPG, PNG, WebP, atau gambar lain. Maksimal 5 MB.</div>
+        <img id="fotoPreview" class="hidden" alt="Pratinjau foto anggota" style="display:block;max-width:150px;max-height:150px;object-fit:cover;border-radius:12px;margin-top:10px">
+        <div class="muted" id="fotoUploadMsg" role="status"></div>
+      </div>
       <div><label for="fKlinik">Nama klinik / tempat praktik</label><input id="fKlinik"></div>
       <div><label for="fLanding">URL profil / website</label><input id="fLanding" type="url"></div>
       <div><label for="fLokasiUrl">URL Google Maps</label><input id="fLokasiUrl" type="url"></div>
@@ -156,6 +163,7 @@
  }
  function resetEditor(){
    ['editId','fNama','fKota','fWa','fFoto','fKlinik','fLanding','fLokasiUrl','fBio','fLayanan','fBioLayanan','fTarifMin','fTarifMax','fDurMin','fDurMax','fNamaTempat','fKotaLokasi','fAlamat','fLat','fLng'].forEach(id=>$(id).value='');
+   $('fFotoFile').value='';$('fotoPreview').src='';$('fotoPreview').classList.add('hidden');$('fotoUploadMsg').textContent='';
    $('fAktif').value='false';$('fKunjungan').value='both';$('fRadius').value='10';$('fTampilkanLokasi').checked=false;
    renderServiceEditor([]);
  }
@@ -174,6 +182,7 @@
      $('editId').value=m.id;
      const fields={fNama:m.nama,fKota:m.kota,fWa:m.whatsapp,fFoto:m.foto_url,fKlinik:m.klinik,fLanding:m.landing_url,fLokasiUrl:m.lokasi_url,fBio:m.bio,fLayanan:m.layanan,fBioLayanan:m.profile.bio_layanan,fTarifMin:m.profile.tarif_min,fTarifMax:m.profile.tarif_max,fDurMin:m.profile.durasi_min_menit,fDurMax:m.profile.durasi_max_menit,fNamaTempat:m.location.nama_tempat,fKotaLokasi:m.location.kota,fAlamat:m.location.alamat,fLat:m.location.latitude,fLng:m.location.longitude,fRadius:m.location.radius_panggilan_km??10};
      Object.entries(fields).forEach(([id,v])=>$(id).value=v??'');
+     if(m.foto_url){$('fotoPreview').src=m.foto_url;$('fotoPreview').classList.remove('hidden');}
      $('fAktif').value=String(!!m.aktif);$('fKunjungan').value=m.profile.menerima_kunjungan||'both';$('fTampilkanLokasi').checked=!!m.location.tampilkan_lokasi;
      const {data,error}=await client.from('satria_go_mitra_services').select('service_id,tarif,durasi_menit,aktif').eq('anggota_id',m.id);
      if(error){$('editorMsg').textContent='Tidak dapat memuat layanan anggota: '+error.message;return;}
@@ -181,6 +190,29 @@
    }
    $('memberEditor').classList.remove('hidden');$('editorMsg').textContent='Periksa data, lalu tekan Simpan Anggota.';$('memberEditor').scrollIntoView({behavior:'smooth',block:'start'});
  }
+ async function uploadMemberPhoto(memberId){
+   const file=$('fFotoFile').files?.[0];
+   if(!file)return null;
+   if(!file.type.startsWith('image/'))throw new Error('Pilih file gambar dari galeri.');
+   if(file.size>5*1024*1024)throw new Error('Ukuran foto maksimal 5 MB.');
+   const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+   const path='anggota/'+memberId+'/'+Date.now()+'-'+crypto.randomUUID()+'.'+ext;
+   $('fotoUploadMsg').textContent='Mengunggah foto…';
+   const {error}=await client.storage.from('satria-go-photos').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+   if(error)throw new Error('Upload foto gagal: '+error.message);
+   const {data}=client.storage.from('satria-go-photos').getPublicUrl(path);
+   if(!data?.publicUrl)throw new Error('URL publik foto tidak berhasil dibuat.');
+   $('fotoUploadMsg').textContent='Foto berhasil diunggah.';
+   return data.publicUrl;
+ }
+ $('fFotoFile').addEventListener('change',()=>{
+   const file=$('fFotoFile').files?.[0];
+   if(!file)return;
+   if(!file.type.startsWith('image/')){$('fotoUploadMsg').textContent='File harus berupa gambar.';$('fFotoFile').value='';return;}
+   if(file.size>5*1024*1024){$('fotoUploadMsg').textContent='Ukuran foto maksimal 5 MB.';$('fFotoFile').value='';return;}
+   const url=URL.createObjectURL(file);$('fotoPreview').src=url;$('fotoPreview').classList.remove('hidden');$('fotoUploadMsg').textContent='Pratinjau foto siap. Tekan Simpan Anggota untuk mengunggah.';
+ });
+ $('fFoto').addEventListener('input',()=>{if(val('fFoto')){$('fotoPreview').src=val('fFoto');$('fotoPreview').classList.remove('hidden');}});
  async function saveMember(){
    const btn=$('saveMemberBtn'),msg=$('editorMsg');const nama=val('fNama');
    if(!nama){msg.textContent='Nama anggota wajib diisi.';return;}
@@ -191,6 +223,14 @@
    let result=id?await client.from('anggota').update(memberData).eq('id',memberId).select('id').single():await client.from('anggota').insert(memberData).select('id').single();
    if(result.error){msg.textContent='Gagal menyimpan anggota: '+result.error.message;btn.disabled=false;return;}
    memberId=result.data.id;
+   try{
+     const uploadedUrl=await uploadMemberPhoto(memberId);
+     if(uploadedUrl){
+       const photoUpdate=await client.from('anggota').update({foto_url:uploadedUrl}).eq('id',memberId);
+       if(photoUpdate.error)throw new Error('Foto terunggah, tetapi URL gagal disimpan: '+photoUpdate.error.message);
+       $('fFoto').value=uploadedUrl;
+     }
+   }catch(photoError){msg.textContent=photoError.message;btn.disabled=false;return;}
    const profile={anggota_id:memberId,status_verifikasi:active?'verified':'pending',menerima_pesanan:active,menerima_panggilan:active,menerima_kunjungan:val('fKunjungan'),bio_layanan:val('fBioLayanan')||null,tarif_min:numOrNull('fTarifMin'),tarif_max:numOrNull('fTarifMax'),durasi_min_menit:numOrNull('fDurMin'),durasi_max_menit:numOrNull('fDurMax'),updated_at:new Date().toISOString()};
    const pr=await client.from('satria_go_profiles').upsert(profile,{onConflict:'anggota_id'});
    if(pr.error){msg.textContent='Anggota tersimpan, tetapi profil gagal disimpan: '+pr.error.message;btn.disabled=false;return;}
