@@ -1,4 +1,3 @@
-
 import {
   SITE,
   getPublicCatalog,
@@ -32,15 +31,25 @@ ${urls.map(url => `  <url><loc>${xmlEscape(url)}</loc></url>`).join("\n")}
   });
 }
 
-export async function onRequest() {
-  const homeUrl = `${SITE}/`;
+function sitemapUnavailable() {
+  return new Response("Sitemap sementara tidak dapat dibuat karena katalog publik SATRIA GO tidak tersedia. Silakan coba kembali.", {
+    status: 503,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+      "retry-after": "300",
+      "x-content-type-options": "nosniff"
+    }
+  });
+}
 
+export async function onRequest() {
   try {
     const data = await getPublicCatalog();
     const providers = verifiedProviders(data);
 
     const urls = [
-      homeUrl,
+      `${SITE}/`,
       ...providers.map(provider =>
         `${SITE}/terapis/${encodeURIComponent(profileSlug(provider))}`
       )
@@ -50,9 +59,8 @@ export async function onRequest() {
 
   } catch (error) {
     console.error("Sitemap catalog error:", error);
-
-    // Fallback: tetap berikan sitemap XML valid
-    // meskipun katalog Supabase sementara gagal.
-    return sitemapResponse([homeUrl]);
+    // Jangan kirim sitemap homepage-only saat katalog gagal:
+    // hal itu menyembunyikan kegagalan dan menghilangkan URL profil.
+    return sitemapUnavailable();
   }
 }
