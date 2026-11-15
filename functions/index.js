@@ -28,7 +28,7 @@ export async function onRequest(context) {
       const detail = [city, services.join(", ")].filter(Boolean).join(" · ");
       const href = "/terapis/" + encodeURIComponent(profileSlug(provider));
       return `<li><a href="${href}"><strong>${name}</strong>${detail ? `<span>${escapeHtml(detail)}</span>` : ""}</a></li>`;
-    }).join("\\n");
+    }).join("\n");
 
     const directory = `
 <section class="satria-seo-directory" aria-labelledby="satria-seo-directory-title">
@@ -48,9 +48,9 @@ export async function onRequest(context) {
 
     let html = await page.text();
     if (html.includes("</main>")) {
-      html = html.replace("</main>", directory + "\\n</main>");
+      html = html.replace("</main>", directory + "\n</main>");
     } else if (html.includes("</body>")) {
-      html = html.replace("</body>", directory + "\\n</body>");
+      html = html.replace("</body>", directory + "\n</body>");
     } else {
       return page;
     }
