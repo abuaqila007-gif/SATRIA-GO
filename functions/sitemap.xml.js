@@ -58,9 +58,31 @@ export async function onRequest() {
     return sitemapResponse([...new Set(urls)]);
 
   } catch (error) {
-    console.error("Sitemap catalog error:", error);
-    // Jangan kirim sitemap homepage-only saat katalog gagal:
-    // hal itu menyembunyikan kegagalan dan menghilangkan URL profil.
-    return sitemapUnavailable();
+    console.error("Sitemap catalog error; using last-known public profile URLs:", error);
+    // Tetap sajikan XML valid saat Supabase sedang tidak tersedia.
+    // Daftar ini adalah URL profil publik terakhir yang sudah diterbitkan.
+    const fallbackSlugs = [
+      "ady-kurniawan-2",
+      "aldino-17",
+      "amin-pujanto-36",
+      "andi-1",
+      "anna-38",
+      "dede-royan-arief-andreawan-29",
+      "fatimah-21",
+      "jafar-8",
+      "mahendra-tri-setya-14",
+      "mugiyono-6",
+      "nur-rujiasih-40",
+      "pak-andi-34",
+      "sartinah-5",
+      "suryanto-39",
+      "susanto-q-taka-35",
+      "tabibah-ina-noor-18",
+      "zifora-20"
+    ];
+    return sitemapResponse([
+      `${SITE}/`,
+      ...fallbackSlugs.map(slug => `${SITE}/terapis/${encodeURIComponent(slug)}`)
+    ]);
   }
 }
