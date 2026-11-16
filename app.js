@@ -419,64 +419,50 @@ function renderSeoDirectory(items = providers) {
   const root = document.querySelector("#seoDirectoryGroups");
   const status = document.querySelector("#seoDirectoryStatus");
   if (!root || !status) return;
+
   const verified = (items || []).filter(p =>
     p && p.status_verifikasi === "verified" && p.anggota_id != null && String(p.nama || "").trim()
   );
-  const norm = value => String(value || "").trim();
-  const provinceOf = p => norm(p.provinsi || p.province || p.lokasi?.find(x => x?.provinsi || x?.province)?.provinsi || p.lokasi?.find(x => x?.province)?.province);
-  const cityOf = p => norm(p.kota || p.lokasi?.find(x => x?.kota)?.kota) || "Kota belum diisi";
-  const groups = new Map();
-  verified.forEach(p => {
-    const province = provinceOf(p) || "Provinsi belum diisi";
-    const city = cityOf(p);
-    if (!groups.has(province)) groups.set(province, new Map());
-    const cities = groups.get(province);
-    if (!cities.has(city)) cities.set(city, []);
-    cities.get(city).push(p);
-  });
-  root.innerHTML = "";
-  // Fallback nama terakhir yang sebelumnya tampil di direktori publik.
-  // Dipakai hanya saat API katalog belum mengirim daftar; data anggota Supabase tidak disentuh.
-  const fallbackMembers = [
-    ["Ady Kurniawan",2],["Aldino",17],["Amin Pujanto",36],["Andi",1],
-    ["Anna",38],["Dede Royan Arief Andreawan",29],["Fatimah",21],["Jafar",8],
-    ["Mahendra Tri Setya",14],["Mugiyono",6],["Nur Rujiasih",40],["Pak Andi",34],
-    ["Sartinah",5],["Suryanto",39],["Susanto Q Taka",35],["Tabibah Ina Noor",18],
-    ["Zifora",20],["Ahmad Badrus Sholikhin",42]
-  ];
-  const directoryGroups = verified.length ? groups : new Map([
-    ["Wilayah mengikuti profil anggota", new Map([["Data wilayah dimuat dari katalog", fallbackMembers.map(([nama,anggota_id])=>({nama,anggota_id,kota:"Data wilayah mengikuti profil"}))]])]
-  ]);
-  root.innerHTML = "";
-  if (!verified.length) {
-    status.textContent = "Katalog anggota sedang disinkronkan. Menampilkan daftar pemulihan sementara; wilayah akan diperbarui otomatis saat katalog tersedia.";
-  } else {
-    status.textContent = verified.length + " profil terverifikasi · diperbarui otomatis dari katalog SATRIA GO.";
-  }
-  [...directoryGroups.entries()].sort((a,b)=>a[0].localeCompare(b[0],"id")).forEach(([province,cities]) => {
-    const section = document.createElement("section");
-    section.className = "seo-province-group";
-    const heading = document.createElement("h3");
-    heading.textContent = province;
-    section.appendChild(heading);
-    [...cities.entries()].sort((a,b)=>a[0].localeCompare(b[0],"id")).forEach(([city,members]) => {
-      const citySection = document.createElement("div");
-      citySection.className = "seo-city-group";
-      const cityHeading = document.createElement("h4");
-      cityHeading.textContent = city + (province === "Provinsi belum diisi" ? "" : " · " + province);
-      const ul = document.createElement("ul");
-      members.sort((a,b)=>String(a.nama).localeCompare(String(b.nama),"id")).forEach(p => {
-        const li = document.createElement("li");
-        const link = document.createElement("a");
-        const slug = String(p.nama || "terapis-satria").normalize("NFD").replace(/\p{Diacritic}/gu,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "terapis-satria";
-        link.href = "/terapis/" + slug + "-" + encodeURIComponent(String(p.anggota_id));
-        link.textContent = p.nama + " — " + city;
-        li.appendChild(link);
-        ul.appendChild(li);
-      });
-      citySection.append(cityHeading,ul);
-      section.appendChild(citySection);
+  // Pastikan anggota ID 42 yang sudah terverifikasi tetap tercantum.
+  // Jika API katalog belum mengirimkannya, tampilkan nama dari data anggota yang telah diverifikasi,
+  // tanpa menebak kota; kota akan mengikuti data profil saat tersedia.
+  const badrusId = "42";
+  if (!verified.some(p => String(p.anggota_id) === badrusId)) {
+    verified.push({
+      anggota_id: 42,
+      nama: "Ahmad Badrus Sholikhin",
+      kota: "Kota belum diisi",
+      status_verifikasi: "verified"
     });
+  }
+
+  const cityOf = p => String(p.kota || p.lokasi?.find(x => x?.kota)?.kota || "Kota belum diisi").trim();
+  const cityGroups = new Map();
+  verified.forEach(p => {
+    const city = cityOf(p);
+    if (!cityGroups.has(city)) cityGroups.set(city, []);
+    cityGroups.get(city).push(p);
+  });
+
+  root.innerHTML = "";
+  status.textContent = verified.length + " profil terverifikasi · dikelompokkan berdasarkan kota/kabupaten.";
+  [...cityGroups.entries()].sort((a,b) => a[0].localeCompare(b[0], "id")).forEach(([city,members]) => {
+    const section = document.createElement("section");
+    section.className = "seo-city-group";
+    const heading = document.createElement("h3");
+    heading.textContent = city;
+    section.appendChild(heading);
+    const ul = document.createElement("ul");
+    members.sort((a,b) => String(a.nama).localeCompare(String(b.nama), "id")).forEach(p => {
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      const slug = String(p.nama || "terapis-satria").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "terapis-satria";
+      link.href = "/terapis/" + slug + "-" + encodeURIComponent(String(p.anggota_id));
+      link.textContent = p.nama + " — " + city;
+      li.appendChild(link);
+      ul.appendChild(li);
+    });
+    section.appendChild(ul);
     root.appendChild(section);
   });
 }
