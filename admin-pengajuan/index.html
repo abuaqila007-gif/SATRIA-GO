@@ -61,6 +61,7 @@
     <div class="grid">
       <div><label for="fBioLayanan">Bio layanan SATRIA GO</label><textarea id="fBioLayanan" rows="2"></textarea></div>
       <div><label for="fKunjungan">Jenis kunjungan</label><select id="fKunjungan"><option value="both">Klinik dan panggilan</option><option value="clinic">Klinik saja</option><option value="home">Panggilan saja</option></select></div>
+      <div><label for="fGenderPasien">Melayani pasien</label><select id="fGenderPasien"><option value="both">Pria &amp; Wanita</option><option value="male">Khusus Pria</option><option value="female">Khusus Wanita</option></select><small class="muted">Catatan ini ditampilkan pada kartu profil anggota.</small></div>
       <div><label for="fTarifMin">Tarif minimum (Rp)</label><input id="fTarifMin" type="number" min="0"></div>
       <div><label for="fTarifMax">Tarif maksimum (Rp)</label><input id="fTarifMax" type="number" min="0"></div>
       <div><label for="fDurMin">Durasi minimum (menit)</label><input id="fDurMin" type="number" min="1"></div>
@@ -128,7 +129,7 @@
    const msg=$('manageMsg');msg.textContent='Memuat anggota…';
    const [a,p,l]=await Promise.all([
      client.from('anggota').select('id,nama,kota,foto_url,layanan,whatsapp,bio,aktif,klinik,landing_url,lokasi_url').order('nama').limit(1000),
-     client.from('satria_go_profiles').select('anggota_id,status_verifikasi,menerima_pesanan,menerima_panggilan,menerima_kunjungan,bio_layanan,tarif_min,tarif_max,durasi_min_menit,durasi_max_menit'),
+     client.from('satria_go_profiles').select('anggota_id,status_verifikasi,menerima_pesanan,menerima_panggilan,menerima_kunjungan,jenis_kelamin_pasien,bio_layanan,tarif_min,tarif_max,durasi_min_menit,durasi_max_menit'),
      client.from('satria_go_locations').select('anggota_id,nama_tempat,alamat,kota,latitude,longitude,radius_panggilan_km,tampilkan_lokasi')
    ]);
    await loadServiceCatalog();
@@ -172,7 +173,7 @@
  function resetEditor(){
    ['editId','fNama','fKota','fWa','fFoto','fKlinik','fLanding','fLokasiUrl','fBio','fLayanan','fBioLayanan','fTarifMin','fTarifMax','fDurMin','fDurMax','fNamaTempat','fKotaLokasi','fAlamat','fLat','fLng'].forEach(id=>$(id).value='');
    $('fFotoFile').value='';$('fotoPreview').src='';$('fotoPreview').classList.add('hidden');$('fotoUploadMsg').textContent='';
-   $('fAktif').value='false';$('fKunjungan').value='both';$('fRadius').value='10';$('fTampilkanLokasi').checked=false;
+   $('fAktif').value='false';$('fKunjungan').value='both';$('fGenderPasien').value='both';$('fRadius').value='10';$('fTampilkanLokasi').checked=false;
    renderServiceEditor([]);
  }
  function renderServiceEditor(existing=[]){
@@ -191,7 +192,7 @@
      const fields={fNama:m.nama,fKota:m.kota,fWa:m.whatsapp,fFoto:m.foto_url,fKlinik:m.klinik,fLanding:m.landing_url,fLokasiUrl:m.lokasi_url,fBio:m.bio,fLayanan:m.layanan,fBioLayanan:m.profile.bio_layanan,fTarifMin:m.profile.tarif_min,fTarifMax:m.profile.tarif_max,fDurMin:m.profile.durasi_min_menit,fDurMax:m.profile.durasi_max_menit,fNamaTempat:m.location.nama_tempat,fKotaLokasi:m.location.kota,fAlamat:m.location.alamat,fLat:m.location.latitude,fLng:m.location.longitude,fRadius:m.location.radius_panggilan_km??10};
      Object.entries(fields).forEach(([id,v])=>$(id).value=v??'');
      if(m.foto_url){$('fotoPreview').src=m.foto_url;$('fotoPreview').classList.remove('hidden');}
-     $('fAktif').value=String(!!m.aktif);$('fKunjungan').value=m.profile.menerima_kunjungan||'both';$('fTampilkanLokasi').checked=!!m.location.tampilkan_lokasi;
+     $('fAktif').value=String(!!m.aktif);$('fKunjungan').value=m.profile.menerima_kunjungan||'both';$('fGenderPasien').value=m.profile.jenis_kelamin_pasien||'both';$('fTampilkanLokasi').checked=!!m.location.tampilkan_lokasi;
      const {data,error}=await client.from('satria_go_mitra_services').select('service_id,tarif,durasi_menit,aktif').eq('anggota_id',m.id);
      if(error){$('editorMsg').textContent='Tidak dapat memuat layanan anggota: '+error.message;return;}
      renderServiceEditor(data||[]);
@@ -240,7 +241,7 @@
        $('fFoto').value=uploadedUrl;
      }
    }catch(photoError){msg.textContent=photoError.message;btn.disabled=false;return;}
-   const profile={anggota_id:memberId,status_verifikasi:active?'verified':'pending',menerima_pesanan:active,menerima_panggilan:['home','both'].includes(val('fKunjungan')),menerima_kunjungan:val('fKunjungan'),bio_layanan:val('fBioLayanan')||null,tarif_min:numOrNull('fTarifMin'),tarif_max:numOrNull('fTarifMax'),durasi_min_menit:numOrNull('fDurMin'),durasi_max_menit:numOrNull('fDurMax'),updated_at:new Date().toISOString()};
+   const profile={anggota_id:memberId,status_verifikasi:active?'verified':'pending',menerima_pesanan:active,menerima_panggilan:['home','both'].includes(val('fKunjungan')),menerima_kunjungan:val('fKunjungan'),jenis_kelamin_pasien:val('fGenderPasien'),bio_layanan:val('fBioLayanan')||null,tarif_min:numOrNull('fTarifMin'),tarif_max:numOrNull('fTarifMax'),durasi_min_menit:numOrNull('fDurMin'),durasi_max_menit:numOrNull('fDurMax'),updated_at:new Date().toISOString()};
    const pr=await client.from('satria_go_profiles').upsert(profile,{onConflict:'anggota_id'});
    if(pr.error){msg.textContent='Anggota tersimpan, tetapi profil gagal disimpan: '+pr.error.message;btn.disabled=false;return;}
    const location={anggota_id:memberId,nama_tempat:val('fNamaTempat')||null,alamat:val('fAlamat')||null,kota:val('fKotaLokasi')||null,latitude:numOrNull('fLat'),longitude:numOrNull('fLng'),radius_panggilan_km:numOrNull('fRadius')??10,tampilkan_lokasi:$('fTampilkanLokasi').checked,updated_at:new Date().toISOString()};
