@@ -165,7 +165,7 @@
    if(!rows.length){root.innerHTML='<div class="status">Anggota tidak ditemukan.</div>';return;}
    rows.forEach(m=>{
      const el=document.createElement('div');el.className='item';
-     el.innerHTML='<div class="itemhead"><div><b>'+esc(m.nama)+'</b><div class="muted">ID '+esc(m.id)+' · '+esc(m.kota||'Kota belum diisi')+'</div></div><span class="pill">'+(m.aktif?'Aktif':'Nonaktif')+'</span></div><p class="muted">Verifikasi: '+esc(m.profile.status_verifikasi||'belum ada profil')+' · Pesanan: '+(m.profile.menerima_pesanan?'Aktif':'Nonaktif')+' · Panggilan: '+(m.profile.menerima_panggilan?'Aktif':'Nonaktif')+'</p><button class="secondary editMemberBtn">Edit Data</button>';
+     el.innerHTML='<div class="itemhead"><div><b>'+esc(m.nama)+'</b><div class="muted">ID '+esc(m.id)+' · '+esc(m.kota||'Kota belum diisi')+'</div></div><span class="pill">'+(m.aktif?'Aktif':'Nonaktif')+'</span></div><p class="muted">Verifikasi: '+esc(m.profile.status_verifikasi||'belum ada profil')+' · Pesanan: '+(m.profile.menerima_pesanan?'Aktif':'Nonaktif')+' · Home Visit: '+(m.profile.menerima_panggilan?'Tersedia':'Tidak tersedia')+'</p><button class="secondary editMemberBtn">Edit Data</button>';
      el.querySelector('button').addEventListener('click',()=>openMemberEditor(m));root.append(el);
    });
  }
@@ -240,7 +240,7 @@
        $('fFoto').value=uploadedUrl;
      }
    }catch(photoError){msg.textContent=photoError.message;btn.disabled=false;return;}
-   const profile={anggota_id:memberId,status_verifikasi:active?'verified':'pending',menerima_pesanan:active,menerima_panggilan:active,menerima_kunjungan:val('fKunjungan'),bio_layanan:val('fBioLayanan')||null,tarif_min:numOrNull('fTarifMin'),tarif_max:numOrNull('fTarifMax'),durasi_min_menit:numOrNull('fDurMin'),durasi_max_menit:numOrNull('fDurMax'),updated_at:new Date().toISOString()};
+   const profile={anggota_id:memberId,status_verifikasi:active?'verified':'pending',menerima_pesanan:active,menerima_panggilan:['home','both'].includes(val('fKunjungan')),menerima_kunjungan:val('fKunjungan'),bio_layanan:val('fBioLayanan')||null,tarif_min:numOrNull('fTarifMin'),tarif_max:numOrNull('fTarifMax'),durasi_min_menit:numOrNull('fDurMin'),durasi_max_menit:numOrNull('fDurMax'),updated_at:new Date().toISOString()};
    const pr=await client.from('satria_go_profiles').upsert(profile,{onConflict:'anggota_id'});
    if(pr.error){msg.textContent='Anggota tersimpan, tetapi profil gagal disimpan: '+pr.error.message;btn.disabled=false;return;}
    const location={anggota_id:memberId,nama_tempat:val('fNamaTempat')||null,alamat:val('fAlamat')||null,kota:val('fKotaLokasi')||null,latitude:numOrNull('fLat'),longitude:numOrNull('fLng'),radius_panggilan_km:numOrNull('fRadius')??10,tampilkan_lokasi:$('fTampilkanLokasi').checked,updated_at:new Date().toISOString()};
