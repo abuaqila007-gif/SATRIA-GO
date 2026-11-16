@@ -4,7 +4,10 @@ export const SITE = "https://satria-go.pages.dev";
 
 export async function getPublicCatalog() {
   const response = await fetch(API_URL, {
-    headers: { apikey: PUBLISHABLE_KEY },
+    headers: {
+      apikey: PUBLISHABLE_KEY,
+      Authorization: `Bearer ${PUBLISHABLE_KEY}`,
+    },
     cf: { cacheTtl: 180, cacheEverything: true }
   });
   if (!response.ok) throw new Error(`Katalog publik gagal dimuat (${response.status})`);
