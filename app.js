@@ -414,6 +414,60 @@ function isWomenOnlyProvider(p) {
     || name === "nur rujiasih"
     || [20, 5, 38].includes(Number(p?.anggota_id));
 }
+
+function renderSeoDirectory(items = providers) {
+  const root = document.querySelector("#seoDirectoryGroups");
+  const status = document.querySelector("#seoDirectoryStatus");
+  if (!root || !status) return;
+  const verified = (items || []).filter(p =>
+    p && p.status_verifikasi === "verified" && p.anggota_id != null && String(p.nama || "").trim()
+  );
+  const norm = value => String(value || "").trim();
+  const provinceOf = p => norm(p.provinsi || p.province || p.lokasi?.find(x => x?.provinsi || x?.province)?.provinsi || p.lokasi?.find(x => x?.province)?.province);
+  const cityOf = p => norm(p.kota || p.lokasi?.find(x => x?.kota)?.kota) || "Kota belum diisi";
+  const groups = new Map();
+  verified.forEach(p => {
+    const province = provinceOf(p) || "Provinsi belum diisi";
+    const city = cityOf(p);
+    if (!groups.has(province)) groups.set(province, new Map());
+    const cities = groups.get(province);
+    if (!cities.has(city)) cities.set(city, []);
+    cities.get(city).push(p);
+  });
+  root.innerHTML = "";
+  if (!verified.length) {
+    status.textContent = "Belum ada profil anggota terverifikasi yang diterima katalog publik.";
+    return;
+  }
+  status.textContent = verified.length + " profil terverifikasi · diperbarui otomatis dari katalog SATRIA GO.";
+  [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],"id")).forEach(([province,cities]) => {
+    const section = document.createElement("section");
+    section.className = "seo-province-group";
+    const heading = document.createElement("h3");
+    heading.textContent = province;
+    section.appendChild(heading);
+    [...cities.entries()].sort((a,b)=>a[0].localeCompare(b[0],"id")).forEach(([city,members]) => {
+      const citySection = document.createElement("div");
+      citySection.className = "seo-city-group";
+      const cityHeading = document.createElement("h4");
+      cityHeading.textContent = city + (province === "Provinsi belum diisi" ? "" : " · " + province);
+      const ul = document.createElement("ul");
+      members.sort((a,b)=>String(a.nama).localeCompare(String(b.nama),"id")).forEach(p => {
+        const li = document.createElement("li");
+        const link = document.createElement("a");
+        const slug = String(p.nama || "terapis-satria").normalize("NFKD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "terapis-satria";
+        link.href = "/terapis/" + slug + "-" + encodeURIComponent(String(p.anggota_id));
+        link.textContent = p.nama + " — " + city;
+        li.appendChild(link);
+        ul.appendChild(li);
+      });
+      citySection.append(cityHeading,ul);
+      section.appendChild(citySection);
+    });
+    root.appendChild(section);
+  });
+}
+
 function renderProviders(items) {
   if (items) providers = [...items];
   const normCity = v => String(v || "").toLocaleLowerCase("id-ID").replace(/[^a-z0-9]+/g," ").trim();
@@ -588,6 +642,7 @@ async function loadCatalog() {
     if (!Array.isArray(data.services) || !data.services.length) throw new Error("Katalog layanan kosong.");
     renderServices(data.services);
     renderProviders(data.providers || []);
+    renderSeoDirectory(data.providers || []);
     const serviceFilter = $("#mapServiceFilter");
     if (serviceFilter && serviceFilter.options.length === 1) data.services.forEach(s => {
       const opt=document.createElement("option"); opt.value=String(s.id); opt.textContent=s.nama || s.name; serviceFilter.appendChild(opt);
