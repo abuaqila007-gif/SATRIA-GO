@@ -659,7 +659,7 @@ async function loadCatalog() {
     } finally {
       clearTimeout(timeoutId);
     }
-    if (!r.ok) { const responseText = await r.text().catch(() => ""); throw new Error("HTTP " + r.status + " dari public-catalog: " + (responseText.slice(0, 500) || r.statusText)); }
+    if (!r.ok) throw new Error(`Katalog belum tersedia dari server (HTTP ${r.status}).`);
     const data = await r.json();
     if (!Array.isArray(data.services) || !data.services.length) throw new Error("Katalog layanan kosong.");
     renderServices(data.services);
@@ -682,15 +682,12 @@ async function loadCatalog() {
     renderMemberMap([]);
     const timedOut = e?.name === "AbortError";
     msg.textContent = timedOut
-      ? "Katalog melewati batas waktu 12 detik. Periksa koneksi lalu muat ulang."
-      : "Katalog gagal dimuat: " + String(e?.message || e).slice(0, 240);
+      ? "Katalog melewati batas waktu 12 detik. Daftar pemulihan ditampilkan; coba muat ulang."
+      : "Katalog mitra belum dapat diakses. Daftar pemulihan ditampilkan sementara.";
   } finally {
     catalogLoading = false;
   }
 }
-// Mulai katalog sebelum event handler lain agar error handler tidak menghentikannya.
-loadCatalog();
-
 document.querySelectorAll(".service-card").forEach(b=>b.addEventListener("click",()=>selectService(b.dataset.serviceName,null,b)));
 document.querySelectorAll(".method-card").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".method-card").forEach(x=>x.classList.remove("active"));
@@ -842,6 +839,7 @@ $("#reviewForm")?.addEventListener("submit", async e => {
   } catch(err) { status.textContent=err.message; }
 });
 
+loadCatalog();
 // Refresh katalog saat tab kembali aktif dan setiap 30 detik.
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Date.now() - lastCatalogLoadedAt > 5000) loadCatalog();
