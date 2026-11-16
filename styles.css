@@ -498,3 +498,31 @@ input,select,textarea{font-size:16px;padding:14px}
   line-height: 1.45;
   font-weight: 650;
 }
+
+
+/* Badge kategori pasien: kontras tinggi agar mudah terlihat pada kartu mitra */
+.provider-gender-note{
+  display:inline-flex!important;
+  align-items:center;
+  width:max-content;
+  max-width:100%;
+  margin:10px 0 4px!important;
+  padding:8px 12px!important;
+  border:1px solid #a9081a!important;
+  border-radius:9px!important;
+  background:linear-gradient(110deg,#8f0717,#d10b1d 65%,#ed2638)!important;
+  color:#fff!important;
+  font-size:12px!important;
+  line-height:1.25!important;
+  font-weight:950!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase;
+  box-shadow:0 3px 8px #d10b1d30;
+}
+@media(max-width:600px){
+  .provider-gender-note{
+    font-size:12px!important;
+    padding:9px 11px!important;
+    margin-top:9px!important;
+  }
+}
