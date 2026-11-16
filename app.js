@@ -468,7 +468,7 @@ function renderSeoDirectory(items = providers) {
       members.sort((a,b)=>String(a.nama).localeCompare(String(b.nama),"id")).forEach(p => {
         const li = document.createElement("li");
         const link = document.createElement("a");
-        const slug = String(p.nama || "terapis-satria").normalize("NFD").replace(/\\p{Diacritic}/gu,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "terapis-satria";
+        const slug = String(p.nama || "terapis-satria").normalize("NFD").replace(/\p{Diacritic}/gu,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "terapis-satria";
         link.href = "/terapis/" + slug + "-" + encodeURIComponent(String(p.anggota_id));
         link.textContent = p.nama + " — " + city;
         li.appendChild(link);
