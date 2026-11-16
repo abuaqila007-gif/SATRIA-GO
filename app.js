@@ -435,12 +435,25 @@ function renderSeoDirectory(items = providers) {
     cities.get(city).push(p);
   });
   root.innerHTML = "";
+  // Fallback nama terakhir yang sebelumnya tampil di direktori publik.
+  // Dipakai hanya saat API katalog belum mengirim daftar; data anggota Supabase tidak disentuh.
+  const fallbackMembers = [
+    ["Ady Kurniawan",2],["Aldino",17],["Amin Pujanto",36],["Andi",1],
+    ["Anna",38],["Dede Royan Arief Andreawan",29],["Fatimah",21],["Jafar",8],
+    ["Mahendra Tri Setya",14],["Mugiyono",6],["Nur Rujiasih",40],["Pak Andi",34],
+    ["Sartinah",5],["Suryanto",39],["Susanto Q Taka",35],["Tabibah Ina Noor",18],
+    ["Zifora",20],["Ahmad Badrus Sholikhin",42]
+  ];
+  const directoryGroups = verified.length ? groups : new Map([
+    ["Wilayah mengikuti profil anggota", new Map([["Data wilayah dimuat dari katalog", fallbackMembers.map(([nama,anggota_id])=>({nama,anggota_id,kota:"Data wilayah mengikuti profil"}))]])]
+  ]);
+  root.innerHTML = "";
   if (!verified.length) {
-    status.textContent = "Belum ada profil anggota terverifikasi yang diterima katalog publik.";
-    return;
+    status.textContent = "Katalog anggota sedang disinkronkan. Menampilkan daftar pemulihan sementara; wilayah akan diperbarui otomatis saat katalog tersedia.";
+  } else {
+    status.textContent = verified.length + " profil terverifikasi · diperbarui otomatis dari katalog SATRIA GO.";
   }
-  status.textContent = verified.length + " profil terverifikasi · diperbarui otomatis dari katalog SATRIA GO.";
-  [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],"id")).forEach(([province,cities]) => {
+  [...directoryGroups.entries()].sort((a,b)=>a[0].localeCompare(b[0],"id")).forEach(([province,cities]) => {
     const section = document.createElement("section");
     section.className = "seo-province-group";
     const heading = document.createElement("h3");
