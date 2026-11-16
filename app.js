@@ -153,7 +153,11 @@ function renderProviderServices(p) {
   const duration = p?.durasi_min_menit != null && p?.durasi_max_menit != null
     ? `${p.durasi_min_menit}–${p.durasi_max_menit} menit`
     : "Durasi dikonfirmasi oleh terapis";
-  const hasHomeVisit = p?.menerima_panggilan === true;
+  const visitMode = String(p?.menerima_kunjungan || "").trim().toLowerCase();
+  // Nilai pilihan admin menjadi sumber utama; flag lama hanya fallback untuk profil lama.
+  const hasHomeVisit = visitMode
+    ? ["home", "both", "keduanya", "panggilan"].includes(visitMode)
+    : isEnabled(p?.menerima_panggilan);
   const availability = hasHomeVisit
     ? "Home visit tersedia"
     : "Hanya datang ke tempat praktik";
@@ -250,15 +254,14 @@ function isEnabled(value) {
   return value === true || value === 1 || String(value ?? "").trim().toLowerCase() === "true" || String(value ?? "").trim() === "1";
 }
 function acceptsMethod(p, method) {
-  const visit = String(p?.menerima_kunjungan || "").toLowerCase();
-  if (method === "home") {
-    // Kolom menerima_panggilan adalah penentu khusus home visit.
-    // Profil dengan nilai "both" tetap tidak boleh tampil bila menerima_panggilan=false.
-    return isEnabled(p?.menerima_panggilan);
+  const visit = String(p?.menerima_kunjungan || "").trim().toLowerCase();
+  if (visit) {
+    if (method === "home") return ["home", "both", "keduanya", "panggilan"].includes(visit);
+    return ["clinic", "both", "keduanya", "datang", "praktik"].includes(visit);
   }
-  // Default: pelanggan datang ke tempat praktik. Profil "both" juga diterima.
-  return ["clinic", "both", "keduanya", "datang", "praktik"].includes(visit)
-    || isEnabled(p?.menerima_kunjungan);
+  // Kompatibilitas profil lama yang belum memiliki nilai menerima_kunjungan.
+  if (method === "home") return isEnabled(p?.menerima_panggilan);
+  return true;
 }
 let satriaMap = null;
 let mapMarkers = [];
@@ -554,15 +557,20 @@ function renderProviders(items) {
     location.textContent = providerLocation(p);
     const state = document.createElement("small");
     state.className = `practice-state ${jakartaPracticeIsOpen() ? "is-open" : "is-closed"}`;
+    const visitMode = String(p?.menerima_kunjungan || "").trim().toLowerCase();
+    const hasHomeVisit = visitMode
+      ? ["home", "both", "keduanya", "panggilan"].includes(visitMode)
+      : isEnabled(p?.menerima_panggilan);
     const nurHomeVisitOnly = String(p?.nama || '').trim().toLocaleLowerCase('id-ID') === 'nur rujiasih';
-    state.textContent = nurHomeVisitOnly ? '● Home Visit saja' : practiceStatusText();
+    const homeOnly = nurHomeVisitOnly || visitMode === "home";
+    state.textContent = homeOnly ? '● Home Visit saja' : practiceStatusText();
     const modes = document.createElement("small");
-    modes.textContent = nurHomeVisitOnly
+    modes.textContent = homeOnly
       ? "HOME VISIT TERSEDIA • Tidak menerima pasien di tempat praktik"
-      : (p.menerima_panggilan
+      : hasHomeVisit
         ? "Praktik & home visit tersedia"
-        : "Datang ke tempat praktik • tanpa home visit");
-    const homeVisitInfo = p.menerima_panggilan === true
+        : "Datang ke tempat praktik • tanpa home visit";
+    const homeVisitInfo = hasHomeVisit
       ? document.createElement("small")
       : null;
     if (homeVisitInfo) {
