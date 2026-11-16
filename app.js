@@ -436,7 +436,14 @@ function renderSeoDirectory(items = providers) {
     });
   }
 
-  const cityOf = p => String(p.kota || p.lokasi?.find(x => x?.kota)?.kota || "Kota belum diisi").trim();
+  const cityOf = p => {
+    const raw = String(p.lokasi?.find(x => x?.kota)?.kota || p.kota || "").trim();
+    if (!raw) return "Kota belum diisi";
+    // Kolom kota kadang berisi alamat lengkap; kelompokkan memakai nama kota/kabupaten.
+    const adminArea = raw.match(/\b(Kota|Kabupaten)\s+([^,.;\n]+)/i);
+    if (adminArea) return adminArea[1][0].toUpperCase() + adminArea[1].slice(1).toLowerCase() + " " + adminArea[2].trim();
+    return raw;
+  };
   const cityGroups = new Map();
   verified.forEach(p => {
     const city = cityOf(p);
