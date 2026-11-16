@@ -69,6 +69,10 @@
     </div>
     <h3>Layanan dan tarif per layanan</h3><div class="muted">Centang layanan yang ditawarkan, lalu isi tarif dan durasi bila diperlukan.</div>
     <div id="serviceEditor" class="status">Memuat daftar layanan…</div>
+    <h3>Paket terapi anggota</h3>
+    <div class="muted">Kelola pilihan paket dan tarif tetap. Paket aktif tampil pada formulir pemesanan.</div>
+    <div id="packageEditor" class="status">Pilih anggota untuk memuat paket…</div>
+    <button type="button" class="secondary" id="addPackageBtn">+ Tambah paket</button>
     <h3>Lokasi praktik</h3>
     <div class="grid">
       <div><label for="fNamaTempat">Nama tempat</label><input id="fNamaTempat"></div>
@@ -170,11 +174,28 @@
      el.querySelector('button').addEventListener('click',()=>openMemberEditor(m));root.append(el);
    });
  }
+
+ function renderPackageEditor(rows=[]){
+   const box=$('packageEditor'); if(!box)return;
+   box.innerHTML='';
+   (rows||[]).forEach(pkg=>addPackageRow(pkg));
+   if(!rows.length)box.textContent='Belum ada paket. Tekan Tambah paket untuk membuat pilihan.';
+ }
+ function addPackageRow(pkg={}){
+   const box=$('packageEditor');
+   if(box.textContent.startsWith('Belum ada paket'))box.innerHTML='';
+   const row=document.createElement('div');row.className='item package-row';row.style.cssText='margin:8px 0;padding:12px;box-shadow:none';
+   row.dataset.id=pkg.id||'';
+   row.innerHTML=`<div class="grid"><div><label>Nama paket</label><input class="pkgName" type="text" placeholder="Nama paket" value="${esc(pkg.nama_paket||'')}"></div><div><label>Tarif tetap (Rp)</label><input class="pkgPrice" type="number" min="0" placeholder="150000" value="${esc(pkg.tarif??'')}"></div><div><label>Durasi (menit)</label><input class="pkgDuration" type="number" min="1" placeholder="60" value="${esc(pkg.durasi_menit??'')}"></div></div><label>Deskripsi / rincian (opsional)</label><input class="pkgDescription" type="text" value="${esc(pkg.deskripsi||'')}" placeholder="Keterangan paket"><label><input class="pkgActive" type="checkbox" style="width:auto;margin-right:8px" ${pkg.aktif===false?'':'checked'}>Paket aktif</label><button type="button" class="danger removePackageBtn">Hapus dari daftar</button>`;
+   row.querySelector('.removePackageBtn').addEventListener('click',()=>row.remove());
+   box.append(row);
+ }
+
  function resetEditor(){
    ['editId','fNama','fKota','fWa','fFoto','fKlinik','fLanding','fLokasiUrl','fBio','fLayanan','fBioLayanan','fTarifMin','fTarifMax','fDurMin','fDurMax','fNamaTempat','fKotaLokasi','fAlamat','fLat','fLng'].forEach(id=>$(id).value='');
    $('fFotoFile').value='';$('fotoPreview').src='';$('fotoPreview').classList.add('hidden');$('fotoUploadMsg').textContent='';
    $('fAktif').value='false';$('fKunjungan').value='both';$('fGenderPasien').value='both';$('fRadius').value='10';$('fTampilkanLokasi').checked=false;
-   renderServiceEditor([]);
+   renderServiceEditor([]);renderPackageEditor([]);
  }
  function renderServiceEditor(existing=[]){
    const map=new Map(existing.map(x=>[String(x.service_id),x]));
@@ -196,6 +217,9 @@
      const {data,error}=await client.from('satria_go_mitra_services').select('service_id,tarif,durasi_menit,aktif').eq('anggota_id',m.id);
      if(error){$('editorMsg').textContent='Tidak dapat memuat layanan anggota: '+error.message;return;}
      renderServiceEditor(data||[]);
+     const packages=await client.from('satria_go_mitra_packages').select('id,nama_paket,deskripsi,tarif,durasi_menit,aktif').eq('anggota_id',m.id).order('id');
+     if(packages.error){$('editorMsg').textContent='Layanan dimuat, tetapi paket gagal dibaca: '+packages.error.message;return;}
+     renderPackageEditor(packages.data||[]);
    }
    $('memberEditor').classList.remove('hidden');$('editorMsg').textContent='Periksa data, lalu tekan Simpan Anggota.';$('memberEditor').scrollIntoView({behavior:'smooth',block:'start'});
  }
@@ -262,13 +286,30 @@
        if(off.error){msg.textContent='Gagal menonaktifkan layanan '+sid+': '+off.error.message;btn.disabled=false;return;}
      }
    }
-   msg.textContent='Berhasil menyimpan anggota, profil, lokasi, dan layanan.';btn.disabled=false;
+   const packageRows=[...document.querySelectorAll('.package-row')];
+   const oldPackages=await client.from('satria_go_mitra_packages').select('id').eq('anggota_id',memberId);
+   if(oldPackages.error){msg.textContent='Anggota tersimpan, tetapi paket gagal dibaca: '+oldPackages.error.message;btn.disabled=false;return;}
+   const keepPackageIds=[];
+   for(const row of packageRows){
+     const name=row.querySelector('.pkgName').value.trim(),price=row.querySelector('.pkgPrice').value,duration=row.querySelector('.pkgDuration').value;
+     if(!name&&!price&&!duration)continue;
+     if(!name||price===''){msg.textContent='Setiap paket harus memiliki nama dan tarif.';btn.disabled=false;return;}
+     const payload={anggota_id:memberId,nama_paket:name,deskripsi:row.querySelector('.pkgDescription').value.trim()||null,tarif:Number(price),durasi_menit:duration===''?null:Number(duration),aktif:row.querySelector('.pkgActive').checked};
+     const pkgId=row.dataset.id;
+     const saved=pkgId?await client.from('satria_go_mitra_packages').update(payload).eq('id',Number(pkgId)).eq('anggota_id',memberId).select('id').single():await client.from('satria_go_mitra_packages').insert(payload).select('id').single();
+     if(saved.error){msg.textContent='Gagal menyimpan paket '+name+': '+saved.error.message;btn.disabled=false;return;}
+     keepPackageIds.push(String(saved.data.id));
+   }
+   const removed=(oldPackages.data||[]).filter(x=>!keepPackageIds.includes(String(x.id))).map(x=>x.id);
+   if(removed.length){const off=await client.from('satria_go_mitra_packages').update({aktif:false}).in('id',removed).eq('anggota_id',memberId);if(off.error){msg.textContent='Paket tersimpan, tetapi paket yang dihapus gagal dinonaktifkan: '+off.error.message;btn.disabled=false;return;}}
+   msg.textContent='Berhasil menyimpan anggota, profil, lokasi, layanan, dan paket.';btn.disabled=false;
    $('memberEditor').classList.add('hidden');await Promise.all([loadManageData(),loadMembers()]);
  }
  $('manageSearch').addEventListener('input',renderManageList);
  $('reloadManageBtn').addEventListener('click',loadManageData);
  $('addMemberBtn').addEventListener('click',()=>openMemberEditor());
  $('saveMemberBtn').addEventListener('click',saveMember);
+ $('addPackageBtn').addEventListener('click',()=>addPackageRow());
  $('cancelEditorBtn').addEventListener('click',()=>$('memberEditor').classList.add('hidden'));
 
  function renderItem(a){const el=document.createElement('article');el.className='item';const d=a.data_pengajuan||{};const services=Array.isArray(d.services)?d.services.map(x=>x.nama||('ID '+x.service_id)).join(', '):'-';const loc=d.lokasi||{};const date=a.submitted_at?new Date(a.submitted_at).toLocaleString('id-ID'):'-';let mapLink='-';try{const u=new URL(loc.maps_url);if(u.protocol==='https:')mapLink=`<a href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">Buka tautan</a>`;}catch{}el.innerHTML=`<div class="itemhead"><div><h2>${esc(a.nama||'Anggota tanpa nama')}</h2><div class="muted">ID Anggota: ${esc(a.anggota_id)} • Pengajuan #${esc(a.id)}</div></div><span class="pill">${esc(a.status)}</span></div><p><b>Kota:</b> ${esc(a.kota_anggota||d.lokasi?.kota||'-')}<br><b>WhatsApp:</b> ${esc(a.whatsapp||'-')}<br><b>Dikirim:</b> ${esc(date)}</p><p><b>Layanan dipilih:</b> ${esc(services)}<br><b>Rentang tarif:</b> ${esc(d.tarif_min??'-')} – ${esc(d.tarif_max??'-')}<br><b>Durasi:</b> ${esc(d.durasi_min_menit??'-')} – ${esc(d.durasi_max_menit??'-')} menit<br><b>Lokasi praktik:</b> ${esc([loc.nama_tempat,loc.alamat,loc.kota].filter(Boolean).join(', ')||'-')}<br><b>Google Maps:</b> ${mapLink}</p><details><summary>Lihat seluruh data pengajuan</summary><pre class="detail">${esc(JSON.stringify(d,null,2))}</pre></details><label>Catatan admin</label><textarea rows="2" class="note" placeholder="Catatan untuk anggota (opsional)">${esc(a.catatan_admin||'')}</textarea><div class="actions"></div>`;
