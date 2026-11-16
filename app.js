@@ -688,6 +688,9 @@ async function loadCatalog() {
     catalogLoading = false;
   }
 }
+// Mulai katalog sebelum event handler lain agar error handler tidak menghentikannya.
+loadCatalog();
+
 document.querySelectorAll(".service-card").forEach(b=>b.addEventListener("click",()=>selectService(b.dataset.serviceName,null,b)));
 document.querySelectorAll(".method-card").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".method-card").forEach(x=>x.classList.remove("active"));
@@ -839,7 +842,6 @@ $("#reviewForm")?.addEventListener("submit", async e => {
   } catch(err) { status.textContent=err.message; }
 });
 
-loadCatalog();
 // Refresh katalog saat tab kembali aktif dan setiap 30 detik.
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && Date.now() - lastCatalogLoadedAt > 5000) loadCatalog();
