@@ -545,12 +545,15 @@ function renderProviders(items) {
     verified.className = "provider-verified-badge";
     verified.textContent = "✓ TERVERIFIKASI SATRIA";
     titleBlock.appendChild(verified);
-    if (isWomenOnlyProvider(p)) {
-      const womenOnly = document.createElement("small");
-      womenOnly.className = "women-only-badge";
-      womenOnly.textContent = "KHUSUS PASIEN WANITA";
-      titleBlock.appendChild(womenOnly);
-    }
+    const patientGender = String(p?.jenis_kelamin_pasien || "both").trim().toLowerCase();
+    const genderNote = document.createElement("small");
+    genderNote.className = "provider-gender-note";
+    genderNote.textContent = patientGender === "male"
+      ? "MELAYANI KHUSUS PRIA"
+      : patientGender === "female"
+        ? "MELAYANI KHUSUS WANITA"
+        : "MELAYANI PRIA & WANITA";
+    titleBlock.appendChild(genderNote);
     identity.appendChild(titleBlock);
     const location = document.createElement("span");
     location.className = "provider-address";
