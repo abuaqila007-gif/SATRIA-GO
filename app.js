@@ -649,8 +649,17 @@ async function loadCatalog() {
   if (catalogLoading) return;
   catalogLoading = true;
   try {
-    const r = await fetch(`${cfg.functionsBaseUrl}/public-catalog`, {headers:{"apikey":cfg.publishableKey}, cache:"no-store"});
-    if (!r.ok) throw new Error("Katalog belum tersedia dari server.");
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+    let r;
+    try {
+      r = await fetch(`${cfg.functionsBaseUrl}/public-catalog`, {
+        headers:{"apikey":cfg.publishableKey}, cache:"no-store", signal:controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    if (!r.ok) throw new Error(`Katalog belum tersedia dari server (HTTP ${r.status}).`);
     const data = await r.json();
     if (!Array.isArray(data.services) || !data.services.length) throw new Error("Katalog layanan kosong.");
     renderServices(data.services);
@@ -664,9 +673,17 @@ async function loadCatalog() {
     lastCatalogLoadedAt = Date.now();
     msg.textContent = data.providers?.length ? `${data.providers.length} mitra terverifikasi tersedia. Daftar diperbarui otomatis.` : (data.catalog_error || "Belum ada mitra terverifikasi yang menerima pesanan.");
   } catch(e) {
+    console.error("SATRIA GO CATALOG ERROR:", e);
     renderServices(servicesFallback.map((nama,i)=>({nama,id:i+1})));
     renderProviders([]);
-    msg.textContent = "Katalog lokal ditampilkan. Koneksi katalog mitra belum tersedia.";
+    // Jangan biarkan direktori dan peta tertahan pada status "Memuat…"
+    // ketika Edge Function gagal atau melewati batas waktu.
+    renderSeoDirectory([]);
+    renderMemberMap([]);
+    const timedOut = e?.name === "AbortError";
+    msg.textContent = timedOut
+      ? "Katalog melewati batas waktu 12 detik. Daftar pemulihan ditampilkan; coba muat ulang."
+      : "Katalog mitra belum dapat diakses. Daftar pemulihan ditampilkan sementara.";
   } finally {
     catalogLoading = false;
   }
