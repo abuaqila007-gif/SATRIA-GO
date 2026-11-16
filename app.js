@@ -659,7 +659,7 @@ async function loadCatalog() {
     } finally {
       clearTimeout(timeoutId);
     }
-    if (!r.ok) throw new Error(`Katalog belum tersedia dari server (HTTP ${r.status}).`);
+    if (!r.ok) { const responseText = await r.text().catch(() => ""); throw new Error("HTTP " + r.status + " dari public-catalog: " + (responseText.slice(0, 500) || r.statusText)); }
     const data = await r.json();
     if (!Array.isArray(data.services) || !data.services.length) throw new Error("Katalog layanan kosong.");
     renderServices(data.services);
@@ -682,8 +682,8 @@ async function loadCatalog() {
     renderMemberMap([]);
     const timedOut = e?.name === "AbortError";
     msg.textContent = timedOut
-      ? "Katalog melewati batas waktu 12 detik. Daftar pemulihan ditampilkan; coba muat ulang."
-      : "Katalog mitra belum dapat diakses. Daftar pemulihan ditampilkan sementara.";
+      ? "Katalog melewati batas waktu 12 detik. Periksa koneksi lalu muat ulang."
+      : "Katalog gagal dimuat: " + String(e?.message || e).slice(0, 240);
   } finally {
     catalogLoading = false;
   }
